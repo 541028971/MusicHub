@@ -9,14 +9,23 @@
 <!-- Include Cropper.css -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
 
-<div class="register" style="padding: 5em 0;">
-    <div class="container">
+<div class="banner" style="min-height: 100vh; padding: 5em 0; display: flex; align-items: center;">
+    <div class="container"
+        style="position: relative; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); padding: 3em; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);">
+
+        <!-- X Close Button to Home -->
+        <a href="{% url 'music:index' %}"
+            style="position: absolute; top: 15px; right: 25px; color: rgba(255,255,255,0.5); font-size: 2em; text-decoration: none; transition: all 0.3s ease; line-height: 1;"
+            onmouseover="this.style.color='#ff4444'; this.style.textShadow='0 0 15px rgba(255,68,68,0.8)';"
+            onmouseout="this.style.color='rgba(255,255,255,0.5)'; this.style.textShadow='none';">&times;</a>
 
         <form id="registration-form" action="{% url 'music:register' %}" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
 
             <div class="register-top-grid" style="width: 100%; max-width: 500px; margin: 0 auto; float: none;">
-                <h1 style="text-align: center;">{% if is_edit %}EDIT PROFILE{% else %}CREATE ACCOUNT{% endif %}</h1>
+                <h1 style="text-align: center; margin-bottom: 1.5em;">
+                    {% if is_edit %}EDIT PROFILE{% else %}CREATE ACCOUNT{% endif %}
+                </h1>
 
                 {% if form.errors %}
                 <div
@@ -75,7 +84,7 @@
 
                 <h4
                     style="margin-top: 2em; margin-bottom: 1em; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1em; color: #fff; font-size: 1.2em; font-weight: 300;">
-                    {% if is_edit %}CHANGE PASSWORD (Leave blank to keep current){% else %}SECURITY{% endif %}
+                    {% if is_edit %}CHANGE PASSWORD (Leave blank to keep current){% endif %}
                 </h4>
 
                 <div style="width: 100%; margin-bottom: 1.5em;">
@@ -87,10 +96,35 @@
                     {% if is_edit %}{{ form.confirm_new_password }}{% else %}{{ form.confirm_password }}{% endif %}
                 </div>
 
-                <div class="register-but" style="margin-top: 2em; text-align: center;">
+                <div class="register-but" style="margin-top: 2.5em; text-align: center; float: none; width: 100%;">
+                    <style>
+                        #registration-form .modern-submit-btn {
+                            background: rgba(255, 255, 255, 0.05) !important;
+                            padding: 12px 0 !important;
+                            border-radius: 6px !important;
+                            font-size: 1.1em !important;
+                            font-weight: 500 !important;
+                            cursor: pointer !important;
+                            width: 75% !important;
+                            display: block !important;
+                            margin: 0 auto !important;
+                            text-align: center !important;
+                            text-decoration: none !important;
+                            transition: all 0.3s ease !important;
+                            color: #00C78A !important;
+                            border: 1px solid rgba(0, 199, 138, 0.4) !important;
+                            letter-spacing: 1px !important;
+                        }
+
+                        #registration-form .modern-submit-btn:hover {
+                            background: rgba(0, 199, 138, 0.15) !important;
+                            color: #00ffb3 !important;
+                            border-color: #00C78A !important;
+                            box-shadow: 0 0 15px rgba(0, 199, 138, 0.3) !important;
+                        }
+                    </style>
                     <input type="submit" value="{% if is_edit %}Update Profile{% else %}Register{% endif %}"
-                        class="btn_3"
-                        style="background:#00C78A; color:#fff; padding:12px 40px; border:none; border-radius:4px; font-size:1.1em; font-weight:bold; cursor:pointer; width: 100%;">
+                        class="modern-submit-btn">
                 </div>
             </div>
         </form>

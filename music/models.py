@@ -1,11 +1,14 @@
 from django.db import models
+from django.contrib.auth.models import User as AuthUser
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 # 1. User 模型
 class User(models.Model):
     # Django 会自动创建 id 作为主键 (取代 uid)
     username = models.CharField(max_length=100)
     password = models.CharField(max_length=100)
-    avatar = models.CharField(max_length=100, default='images/Avatar')
+    avatar = models.CharField(max_length=100, default='images/Avatar/default.jpeg')
     birth = models.DateField(null=True, blank=True)
     identity = models.CharField(max_length=100)
     status = models.CharField(max_length=100)
@@ -111,3 +114,14 @@ class Invitation(models.Model):
 
     def __str__(self):
         return str(self.code)
+
+# Signals to keep CustomUser and AuthUser synchronized when deleted from Admin
+@receiver(post_delete, sender=User)
+def delete_auth_user(sender, instance, **kwargs):
+    if instance.username:
+        AuthUser.objects.filter(username=instance.username).delete()
+
+@receiver(post_delete, sender=AuthUser)
+def delete_custom_user(sender, instance, **kwargs):
+    if instance.username:
+        User.objects.filter(username=instance.username).delete()

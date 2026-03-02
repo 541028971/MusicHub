@@ -249,6 +249,8 @@ input:focus {
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
+    background-attachment: fixed;
+    /* Keep background anchored to viewport, preventing distortion */
     min-height: 600px;
 }
 

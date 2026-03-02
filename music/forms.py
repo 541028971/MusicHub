@@ -22,7 +22,7 @@ class UserRegistrationForm(forms.ModelForm):
 
     def clean_username(self):
         username = self.cleaned_data.get('username')
-        if User.objects.filter(username=username).exists():
+        if User.objects.filter(username=username).exists() or AuthUser.objects.filter(username=username).exists():
             raise ValidationError("This username is already taken.")
         return username
 
@@ -57,7 +57,8 @@ class UserProfileUpdateForm(forms.ModelForm):
     def clean_username(self):
         username = self.cleaned_data.get('username')
         # Check if username exists and it's NOT the current user's username
-        if User.objects.filter(username=username).exclude(pk=self.instance.pk).exists():
+        if User.objects.filter(username=username).exclude(pk=self.instance.pk).exists() or \
+           AuthUser.objects.filter(username=username).exclude(username=self.instance.username).exists():
             raise ValidationError("This username is already taken.")
         return username
 

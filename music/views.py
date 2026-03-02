@@ -40,10 +40,10 @@ def logout_view(request):
 def process_base64_avatar(base64_data, username):
     """ Helper function to save base64 image data to the static Avatar directory. """
     if not base64_data:
-        return 'images/grid (1).jpg' # default
+        return 'images/Avatar/default.jpeg' # default
         
     try:
-        format, imgstr = base66_data.split(';base64,') 
+        format, imgstr = base64_data.split(';base64,') 
         ext = format.split('/')[-1]
         
         # Save explicitly as .png as per old code format
@@ -61,7 +61,7 @@ def process_base64_avatar(base64_data, username):
         return f"images/Avatar/{filename}"
     except Exception as e:
         print(f"Error saving avatar: {e}")
-        return 'images/grid (1).jpg'
+        return 'images/Avatar/default.jpeg'
 
 def register_or_edit_view(request):
     is_edit = request.user.is_authenticated
@@ -101,7 +101,7 @@ def register_or_edit_view(request):
                 avatar_path = process_base64_avatar(base64_avatar, user_instance.username)
                 user_instance.avatar = avatar_path
             elif not is_edit:
-                user_instance.avatar = 'images/grid (1).jpg' # default fallback
+                user_instance.avatar = 'images/Avatar/default.jpeg' # default fallback
                 
             user_instance.save()
             
