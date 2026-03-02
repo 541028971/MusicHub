@@ -1,0 +1,65 @@
+{% extends 'music/base.html' %}
+{% load static %}
+
+{% block title %}Music Library{% endblock %}
+
+{% block content %}
+<main id="main" class="container" style="padding: 24px 0;">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Music Library</h2>
+            <form method="get" action="" class="form-inline" style="margin-bottom:16px;">
+                <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search title or artist" />
+                <button type="submit" class="btn btn-default" style="margin-left:8px;">Search</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for song in page_obj.object_list %}
+        <div class="col-md-3" style="margin-bottom:18px;">
+            <div class="panel panel-default">
+                <div class="panel-body" style="padding:8px;">
+                    <a href="{% url 'music:song_detail' song.pk %}" aria-label="Open {{ song.name }} details">
+                        <img src="{% static 'music/images/grid (1).jpg' %}" class="img-responsive"
+                            alt="Cover for {{ song.name }}" loading="lazy" />
+                    </a>
+                    <h4 style="margin-top:8px;">{{ song.name }}</h4>
+                    <p style="margin:0; color:#666; font-size:90%;">{{ song.album }}</p>
+                </div>
+                <div class="panel-footer" style="padding:8px;">
+                    <a class="btn btn-sm btn-primary" href="{% url 'music:song_detail' song.pk %}">Play / Details</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-md-12">
+            <p>No songs found.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li><a href="?q={{ q }}&page={{ page_obj.previous_page_number }}" aria-label="Previous">&laquo;</a>
+                    </li>
+                    {% else %}
+                    <li class="disabled"><span>&laquo;</span></li>
+                    {% endif %}
+
+                    <li class="active"><span>Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+
+                    {% if page_obj.has_next %}
+                    <li><a href="?q={{ q }}&page={{ page_obj.next_page_number }}" aria-label="Next">&raquo;</a></li>
+                    {% else %}
+                    <li class="disabled"><span>&raquo;</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'music/base.html' %}
+{% load static %}
+
+{% block title %}{{ song.name }}{% endblock %}
+
+{% block content %}
+<main id="main" class="container" style="padding: 24px 0;">
+    <div class="row">
+        <div class="col-md-4">
+            <img src="{% static 'music/images/grid (1).jpg' %}" alt="Cover" class="img-responsive" loading="lazy" />
+        </div>
+        <div class="col-md-8">
+            <h2>{{ song.name }}</h2>
+            <p><strong>Album:</strong> {{ song.album }}</p>
+            <p><strong>Arrangement / Style:</strong> {{ song.arrangement }}</p>
+            <p><strong>Introduction:</strong> {{ song.introduction }}</p>
+
+            <audio id="player" controls preload="none">
+                {% if song.download_link %}
+                <source src="{% static song.download_link %}" type="audio/mpeg">
+                {% endif %}
+                Your browser does not support the audio element.
+            </audio>
+
+            <div style="margin-top:12px;">
+                <button id="favBtn">❤ Favorite</button>
+                <button id="addPlaylist">+ Add to playlist</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('player')?.addEventListener('play', function () {
+            console.log('play event for song {{ song.pk }}');
+        });
+    </script>
+</main>
+{% endblock %}
