@@ -3,63 +3,183 @@
 
 {% block title %}Music Library{% endblock %}
 
+{% block extra_head %}
+<style>
+    /* make library area stretch vertically; height computed by JS */
+    .library-fullscreen {
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 0;
+        /* JS will set appropriate bottom padding */
+        min-height: 100vh;
+        /* fallback, real value set in script */
+    }
+
+    .library-fullscreen .container-fluid {
+        flex: 1 0 auto;
+    }
+
+    /* remove previous fixed footer; it should be static in base template */
+    /* footer positioning handled globally or by JS if needed */
+
+    .song-card {
+        height: 320px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .song-card img {
+        height: 180px;
+        width: 100%;
+        object-fit: cover;
+    }
+
+    .song-card .panel-body {
+        flex-grow: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+
+    /* sidebar redesign: dark background matching header */
+    .sidebar {
+        background: #111;
+        color: #eee;
+        min-height: 100%;
+        padding: 20px;
+    }
+
+    .sidebar a {
+        color: #ccc;
+        text-decoration: none;
+    }
+
+    .sidebar a:hover {
+        color: #fff;
+        text-decoration: underline;
+    }
+
+    .song-card .panel-body h4 {
+        margin-top: 8px;
+        font-size: 16px;
+        line-height: 1.2;
+        height: 2.4em;
+        /* two lines */
+        overflow: hidden;
+    }
+
+    .song-card .panel-body p {
+        margin: 0;
+        color: #666;
+        font-size: 90%;
+        line-height: 1.2;
+        height: 2.4em;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block extra_body %}
+<script>
+    // compute and apply heights so library fills screen below header and above footer
+    function adjustLibraryFill() {
+        const header = document.querySelector('.header');
+        const footer = document.querySelector('footer');
+        const lib = document.querySelector('.library-fullscreen');
+        if (header && footer && lib) {
+            const total = header.offsetHeight + footer.offsetHeight;
+            // subtract header+footer from viewport
+            lib.style.minHeight = `calc(100vh - ${total}px)`;
+            lib.style.paddingBottom = `${footer.offsetHeight}px`;
+        }
+    }
+    window.addEventListener('resize', adjustLibraryFill);
+    window.addEventListener('load', adjustLibraryFill);
+</script>
+{% endblock %}
+
 {% block content %}
-<main id="main" class="container" style="padding: 24px 0;">
-    <div class="row">
-        <div class="col-md-12">
-            <h2>Music Library</h2>
-            <form method="get" action="" class="form-inline" style="margin-bottom:16px;">
-                <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search title or artist" />
-                <button type="submit" class="btn btn-default" style="margin-left:8px;">Search</button>
-            </form>
-        </div>
-    </div>
-
-    <div class="row">
-        {% for song in page_obj.object_list %}
-        <div class="col-md-3" style="margin-bottom:18px;">
-            <div class="panel panel-default">
-                <div class="panel-body" style="padding:8px;">
-                    <a href="{% url 'music:song_detail' song.pk %}" aria-label="Open {{ song.name }} details">
-                        <img src="{% static 'music/images/grid (1).jpg' %}" class="img-responsive"
-                            alt="Cover for {{ song.name }}" loading="lazy" />
-                    </a>
-                    <h4 style="margin-top:8px;">{{ song.name }}</h4>
-                    <p style="margin:0; color:#666; font-size:90%;">{{ song.album }}</p>
-                </div>
-                <div class="panel-footer" style="padding:8px;">
-                    <a class="btn btn-sm btn-primary" href="{% url 'music:song_detail' song.pk %}">Play / Details</a>
-                </div>
-            </div>
-        </div>
-        {% empty %}
-        <div class="col-md-12">
-            <p>No songs found.</p>
-        </div>
-        {% endfor %}
-    </div>
-
-    <div class="row">
-        <div class="col-md-12 text-center">
-            <nav aria-label="Page navigation">
-                <ul class="pagination">
-                    {% if page_obj.has_previous %}
-                    <li><a href="?q={{ q }}&page={{ page_obj.previous_page_number }}" aria-label="Previous">&laquo;</a>
-                    </li>
-                    {% else %}
-                    <li class="disabled"><span>&laquo;</span></li>
-                    {% endif %}
-
-                    <li class="active"><span>Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
-
-                    {% if page_obj.has_next %}
-                    <li><a href="?q={{ q }}&page={{ page_obj.next_page_number }}" aria-label="Next">&raquo;</a></li>
-                    {% else %}
-                    <li class="disabled"><span>&raquo;</span></li>
-                    {% endif %}
+<div class="library-fullscreen">
+    <div class="container-fluid" style="padding: 0;">
+        <div class="row">
+            <nav class="col-md-2 sidebar">
+                <h4>My Playlists</h4>
+                <ul class="list-unstyled">
+                    <li><a href="#">Liked Songs (12)</a></li>
+                    <li><a href="#">Workout Mix</a></li>
+                    <li><a href="#">Late Night Jazz</a></li>
                 </ul>
+                <h4>Discover Filters</h4>
+                <form>
+                    <div class="checkbox"><label><input type="checkbox" name="genre" value="pop"> Pop</label></div>
+                    <div class="checkbox"><label><input type="checkbox" name="genre" value="rock"> Rock</label></div>
+                    <div class="checkbox"><label><input type="checkbox" name="genre" value="electronic">
+                            Electronic</label>
+                    </div>
+                </form>
             </nav>
-        </div>
-    </div>
-</main>
+            <main class="col-md-10" style="padding:20px;">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h2>Music Library</h2>
+                        <form method="get" action="" class="form-inline" style="margin-bottom:16px;">
+                            <input type="text" name="q" value="{{ q }}" class="form-control"
+                                placeholder="Search title or artist" />
+                            <button type="submit" class="btn btn-default" style="margin-left:8px;">Search</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="row">
+                    {% for song in page_obj.object_list %}
+                    <div class="col-lg-2 col-md-3 col-sm-4 col-6 col_1" style="margin-bottom:20px;">
+                        <a href="{% url 'music:song_detail' song.pk %}" style="display:block; position:relative;">
+                            <img src="{% static song.download_link|default:'music/images/grid (1).jpg' %}"
+                                class="img-responsive" alt="{{ song.name }}" loading="lazy"
+                                style="width:100%; height:180px; object-fit:cover;" />
+                            <div
+                                style="position:absolute; left:0; bottom:0; width:100%; background:rgba(0,0,0,0.6); color:#fff; font-size:12px; padding:4px 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                {{ song.name }}
+                            </div>
+                        </a>
+                    </div>
+                    {% empty %}
+                    <div class="col-md-12">
+                        <p>No songs found.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12 text-center">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                {% if page_obj.has_previous %}
+                                <li><a href="?q={{ q }}&page={{ page_obj.previous_page_number }}"
+                                        aria-label="Previous">&laquo;</a>
+                                </li>
+                                {% else %}
+                                <li class="disabled"><span>&laquo;</span></li>
+                                {% endif %}
+
+                                <li class="active"><span>Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages
+                                        }}</span></li>
+
+                                {% if page_obj.has_next %}
+                                <li><a href="?q={{ q }}&page={{ page_obj.next_page_number }}"
+                                        aria-label="Next">&raquo;</a>
+                                </li>
+                                {% else %}
+                                <li class="disabled"><span>&raquo;</span></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+        </div> <!-- close col-md-10 -->
+    </div> <!-- close row containing sidebar and main -->
+</div> <!-- close library-fullscreen -->
+</div> <!-- close container -->
 {% endblock %}
