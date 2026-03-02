@@ -1,0 +1,208 @@
+{% extends 'music/base.html' %}
+{% load static %}
+
+{% block title %}Main page{% endblock %}
+
+{% block content %}
+<div class="banner">
+    <div class="container">
+        <!-- Placeholder for Dynamic Song -->
+        {% if random_song %}
+        <a href='#' id="now-playing-text" style="position: relative; z-index: 2;">
+            Now playing : {{ random_song.name }}
+        </a>
+        <!-- Note: Audio src logic will be properly mapped to download_link once files are moved -->
+        <embed src="{% static 'music/' %}{{ random_song.download_link }}" controls=playbutton height=1px width=1px
+            type=audio/mp3 loop=true autostart=true>
+        {% endif %}
+
+        <div class="span_1_of_1">
+            <h2>Listen to what you think<br>Travel the world.</h2>
+            <div class="search">
+                <ul class="nav1">
+                    <li id="search" style="position: relative;">
+                        <form action="#" method="POST" style="width: 100%; display: flex;">
+                            {% csrf_token %}
+                            <!-- Smooth Marquee Placeholder Overlay -->
+                            <div id="marquee-layer"
+                                style="position: absolute; left: 20px; top: 0; bottom: 0; right: 50px; overflow: hidden; pointer-events: none; display: flex; align-items: center; z-index: 2; transition: opacity 0.3s; opacity: 1;">
+                                <div id="marquee-track"
+                                    style="display: flex; white-space: nowrap; animation: smoothMarquee 15s linear infinite; color: rgba(255,255,255,0.6); font-size: 14px;">
+                                    <span>Search for title, album, style or arrangement...
+                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                                    <span>Search for title, album, style or arrangement...
+                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                                </div>
+                            </div>
+                            <!-- Actual Input Field -->
+                            <input type="text" name="search_text" id="search_text" placeholder=""
+                                style="position: relative; z-index: 1;" />
+                            <input type="submit" name="search_button" id="search_button" value=""
+                                style="position: relative; z-index: 3;">
+                        </form>
+                    </li>
+                    <li id="options">
+                        <a href="#">All Musics</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid_1">
+    <h3>More than a dozen kinds of music for you to choose from</h3>
+    <br>
+    <div class="col-md-2 col_1">
+        <h4>Pop</h4>
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (1).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (2).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (3).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (4).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (5).jpg' %}" class="img-responsive" alt="" />
+    </div>
+
+    <div class="col-md-2 col_1">
+        <h4>Rock</h4>
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (6).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (7).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (8).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (9).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (10).jpg' %}" class="img-responsive" alt="" />
+    </div>
+
+    <div class="col-md-2 col_1">
+        <h4>Folk</h4>
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (11).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (12).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (13).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (14).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (15).jpg' %}" class="img-responsive" alt="" />
+    </div>
+
+    <div class="col-md-2 col_1">
+        <h4>Electronic</h4>
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (16).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (17).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (18).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (19).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="col-md-2 col_1">
+        <img src="{% static 'music/images/grid (20).jpg' %}" class="img-responsive" alt="" />
+    </div>
+    <div class="clearfix"></div>
+</div>
+
+<div class="grid_2">
+    <div class="container">
+        <div class="col-md-3 col_2">
+            <h3>Music<br>Navigation panel</h3>
+        </div>
+        <div class="col-md-9 col_5">
+            <div class="col_1_of_5 span_1_of_5">
+                <ul class="list1">
+                    <li><a href="#">R&B</a></li>
+                    <li><a href="#">HOUSE</a></li>
+                    <li><a href="#">Britpop</a></li>
+                    <li><a href="#">Trip-Hop</a></li>
+                    <li><a href="#">Gangsta Rap</a></li>
+                    <li><a href="#">Synth Pop</a></li>
+                </ul>
+            </div>
+            <div class="col_1_of_5 span_1_of_5">
+                <ul class="list1">
+                    <li><a href="#">Orchestra</a></li>
+                    <li><a href="#">Chamber Pop</a></li>
+                    <li><a href="#">Folk</a></li>
+                    <li><a href="#">Bossa Nova</a></li>
+                    <li><a href="#">Classical Pop</a></li>
+                    <li><a href="#">Acappella</a></li>
+                </ul>
+            </div>
+            <div class="col_1_of_5 span_1_of_5">
+                <ul class="list1">
+                    <li><a href="#">World Music</a></li>
+                    <li><a href="#">Dream-Pop</a></li>
+                    <li><a href="#">Electronic Music</a></li>
+                    <li><a href="#">Ambient</a></li>
+                    <li><a href="#">Dub</a></li>
+                    <li><a href="#">Punk</a></li>
+                </ul>
+            </div>
+            <div class="col_1_of_5 span_1_of_5">
+                <ul class="list1">
+                    <li><a href="#">Black Metal</a></li>
+                    <li><a href="#">Chill Out</a></li>
+                    <li><a href="#">Minimalism</a></li>
+                    <li><a href="#">Jungle</a></li>
+                    <li><a href="#">Big-Beat</a></li>
+                    <li><a href="#">Breakbeat</a></li>
+                </ul>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+</div>
+
+<!-- Scripts for localized page effects -->
+<script>
+    // Smooth scrolling placeholder visibility control
+    document.addEventListener("DOMContentLoaded", function () {
+        const searchInput = document.getElementById('search_text');
+        const marqueeLayer = document.getElementById('marquee-layer');
+        if (searchInput && marqueeLayer) {
+            // Hide marquee when there is text
+            searchInput.addEventListener('input', function () {
+                marqueeLayer.style.display = this.value.length > 0 ? 'none' : 'flex';
+            });
+            // Dim marquee slightly when focused
+            searchInput.addEventListener('focus', function () {
+                marqueeLayer.style.opacity = '0.3';
+            });
+            // Restore visibility when blurred
+            searchInput.addEventListener('blur', function () {
+                marqueeLayer.style.opacity = '1';
+            });
+        }
+    });
+</script>
+{% endblock %}

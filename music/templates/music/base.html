@@ -1,0 +1,167 @@
+{% load static %}
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Lalaland | {% block title %}Main page{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="keywords"
+        content="Photo-Hub Responsive web template, Bootstrap Web Templates, Flat Web Templates, Andriod Compatible web template, Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, SonyErricsson, Motorola web design" />
+
+    <script type="application/x-javascript">
+        addEventListener("load", function () {
+            setTimeout(hideURLbar, 0);
+        }, false);
+        function hideURLbar() {
+            window.scrollTo(0, 1);
+        } 
+    </script>
+
+    <!-- Load CSS with Django static tags -->
+    <link href="{% static 'music/css/bootstrap.css' %}" rel='stylesheet' type='text/css' />
+    <link href="{% static 'music/css/style.css' %}?v=1.6.4" rel='stylesheet' type='text/css' />
+
+    <!-- Webfonts -->
+    <link href='http://fonts.googleapis.com/css?family=Quicksand:300,400,700' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800' rel='stylesheet' type='text/css'>
+
+    <!-- JS via static tags -->
+    <script type="text/javascript" src="{% static 'music/js/jquery-1.11.1.min.js' %}"></script>
+    <script src="{% static 'music/js/menu_jquery.js' %}"></script>
+</head>
+
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="logo">
+                <!-- Ensure URL links connect to Django views correctly -->
+                <h1><a href="{% url 'music:index' %}">Music Hub</a></h1>
+            </div>
+            <div class="top_right">
+                {% if request.user.is_authenticated %}
+                <!-- Logged In View (replaces indexL.php & userprofile.php) -->
+                <ul>
+                    <li class='login'>
+                        <div id='loginContainer'>
+                            <!-- Use user avatar if we have a profile mechanism, or default for now -->
+                            <a href="#" id="loginButton"
+                                style="display: inline-block; width: 28px; height: 28px; border-radius: 50%; overflow: hidden; vertical-align: middle; margin: 0 5px; padding: 0; outline: none; border: 2px solid rgba(255,255,255,0.2);">
+                                <img src="{% static 'music/images/Avatar/' %}{{ request.user.username }}.png"
+                                    style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar"
+                                    onerror="this.onerror=null; this.src='/static/music/images/grid (1).jpg';" />
+                            </a>
+                            <div id='loginBox'>
+                                <form id='loginForm'>
+                                    <fieldset id='body'>
+                                        <fieldset>
+                                            <span
+                                                style="display: block; text-align: center; padding: 10px 0; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 5px;">
+                                                <b>{{ request.user.username }}</b>
+                                            </span>
+                                        </fieldset>
+                                        <fieldset>
+                                            <span><a href='#' id='loginButton'>Dashboard</a></span>
+                                        </fieldset>
+                                        <fieldset>
+                                            <span><a href='#' id='loginButton'>Announcement</a></span>
+                                        </fieldset>
+                                        <fieldset>
+                                            <span><a href='#' id='loginButton'>All Musics</a></span>
+                                        </fieldset>
+                                        <fieldset>
+                                            <span><a href='#' id='loginButton'>Playlists</a></span>
+                                        </fieldset>
+                                        <fieldset>
+                                            <span><a href='#' id='loginButton'>Favourites</a></span>
+                                        </fieldset>
+                                        <fieldset>
+                                            <span><a href='#' id='loginButton'>History</a></span>
+                                        </fieldset>
+                                        <fieldset>
+                                            <span><a href='#' id='loginButton'>Comment</a></span>
+                                        </fieldset>
+                                        <fieldset>
+                                            <span><a href='#' id='loginButton'>Feedback</a></span>
+                                        </fieldset>
+
+                                        <!-- Dynamic links based on identity (Manager only as requested) -->
+                                        {% if request.user.custom_user.identity == 'Manager' %}
+                                        <fieldset>
+                                            <span><a href='#' id='loginButton'>Management</a></span>
+                                        </fieldset>
+                                        <fieldset>
+                                            <span><a href='#' id='loginButton'>Upload Music</a></span>
+                                        </fieldset>
+                                        {% endif %}
+
+                                        <fieldset>
+                                            <span><a href="{% url 'music:logout' %}" id="loginButton">Log Out</a></span>
+                                        </fieldset>
+                                    </fieldset>
+                                </form>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+                {% else %}
+                <!-- Logged Out View (replaces index.php) -->
+                <ul>
+                    <li><a href="{% url 'music:register' %}">Register</a></li>
+                    |
+                    <li class="login">
+                        <div id="loginContainer"><a href="#" id="loginButton"><span>Login</span></a>
+                            <div id="loginBox">
+                                <form id="loginForm" action="{% url 'music:login' %}" method="POST">
+                                    {% csrf_token %}
+                                    <fieldset id="body">
+                                        <!-- Display Error Messages -->
+                                        {% if messages %}
+                                        {% for message in messages %}
+                                        <div
+                                            style="color: #ff4444; font-size: 12px; margin-bottom: 10px; text-align: center;">
+                                            {{ message }}
+                                        </div>
+                                        {% endfor %}
+                                        {% endif %}
+
+                                        <fieldset>
+                                            <label for="username">Username</label>
+                                            <input type="text" name="uname" id="uname">
+                                        </fieldset>
+                                        <fieldset>
+                                            <label for="password">Password</label>
+                                            <input type="password" name="password" id="password">
+                                        </fieldset>
+                                        <input type="submit" id="login" value="Sign in">
+                                        <label for="checkbox"><input type="checkbox" id="checkbox"> <i>Remember
+                                                me</i></label>
+                                    </fieldset>
+                                    <span><a href="#">Forgot your password?</a></span>
+                                </form>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+                {% endif %}
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+
+    <!-- Main Content Block -->
+    {% block content %}
+    {% endblock %}
+
+    <!-- Footer Block -->
+    <div class="grid_3">
+        <div class="container">
+            <ul id="footer-links">
+                <li><a href="#">About Us</a></li>
+            </ul>
+            <p>Copyright © 2026 Music-Hub. All Rights Reserved. Design by <a href="#" target="_blank">Lalaland</a></p>
+        </div>
+    </div>
+</body>
+
+</html>
