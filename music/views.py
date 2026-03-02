@@ -149,3 +149,33 @@ def register_or_edit_view(request):
         'is_edit': is_edit
     }
     return render(request, 'music/register.html', context)
+
+
+def music_library_view(request):
+    """Static/initial Music Library view - supports simple query and pagination."""
+    q = request.GET.get('q', '')
+    songs = Song.objects.all().order_by('-id')
+    if q:
+        songs = songs.filter(name__icontains=q)
+
+    # Simple pagination
+    from django.core.paginator import Paginator
+    paginator = Paginator(songs, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'q': q,
+    }
+    return render(request, 'music/library.html', context)
+
+
+def song_detail_view(request, pk):
+    """Static song detail view."""
+    from django.shortcuts import get_object_or_404
+    song = get_object_or_404(Song, pk=pk)
+    context = {
+        'song': song,
+    }
+    return render(request, 'music/song_detail.html', context)

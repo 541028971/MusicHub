@@ -21,8 +21,8 @@
             <div class="search">
                 <ul class="nav1">
                     <li id="search" style="position: relative;">
-                        <form action="#" method="POST" style="width: 100%; display: flex;">
-                            {% csrf_token %}
+                        <form action="{% url 'music:library' %}" method="get" style="width: 100%; display: flex;">
+                            <!-- GET search, CSRF not needed -->
                             <!-- Smooth Marquee Placeholder Overlay -->
                             <div id="marquee-layer"
                                 style="position: absolute; left: 20px; top: 0; bottom: 0; right: 50px; overflow: hidden; pointer-events: none; display: flex; align-items: center; z-index: 2; transition: opacity 0.3s; opacity: 1;">
@@ -42,7 +42,7 @@
                         </form>
                     </li>
                     <li id="options">
-                        <a href="#">All Musics</a>
+                        <a href="{% url 'music:library' %}">All Musics</a>
                     </li>
                 </ul>
             </div>
