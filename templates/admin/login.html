@@ -14,9 +14,23 @@
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         min-height: 100vh;
+        display: block;
+    }
+    /* 隐藏顶部/左侧栏位和header
+       登录页不用展示任何蓝条 */
+    #header, .admin-leftbar {
+        display: none !important;
+    }
+
+    /* 全屏包裹器：确保登录框在视口中央（覆盖可能的侧边栏占位） */
+    .login-wrapper {
+        position: fixed;
+        inset: 0;
         display: flex;
-        justify-content: center;
         align-items: center;
+        justify-content: center;
+        padding: 20px;
+        box-sizing: border-box;
     }
     
     #header {
@@ -166,7 +180,8 @@
 {% endblock %}
 
 {% block content %}
-<div class="login-container">
+<div class="login-wrapper">
+    <div class="login-container">
     <div class="login-title">
         <h2>🎵 MusicHub</h2>
         <p>管理员登录</p>
@@ -207,6 +222,8 @@
     <p style="text-align: center; margin-top: 30px; color: #999; font-size: 12px;">
         © 2026 MusicHub 管理中心。保留所有权利。
     </p>
+</div>
+    </div>
 </div>
 {% endblock %}
 

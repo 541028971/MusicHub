@@ -40,7 +40,134 @@
     .submit-row input.default:hover {
         background: #2c5aa0;
     }
+    /* 隐藏 admin 页面左侧导航栏并让主内容扩展 */
+    #nav-sidebar, .nav-sidebar, #sidebar, .module.filtered {
+        display: none !important;
+    }
+
+    #content, #content-main, .content {
+        margin-left: 0 !important;
+        width: auto !important;
+    }
+    /* 登录页特殊处理：隐藏侧边的权限提示区域 */
+    body.login #content-main {
+        padding-left: 0 !important;
+    }
+    /* 登录页不显示左侧竖栏/顶部 header */
+    body.login #header,
+    body.login .admin-leftbar {
+        display: none !important;
+    }
+    /* 隐藏左侧侧栏 */
+    .admin-leftbar {
+        display: none !important;
+    }
+    .admin-main {
+        margin-left: 0 !important;
+    }
+
+    /* 将顶部蓝条改为左侧竖直导航栏 */
+    #header {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 84px;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 6px;
+        box-sizing: border-box;
+        z-index: 999;
+    }
+
+    /* 将站点名称竖排显示 */
+    #site-name, .header a {
+        display: block;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        text-align: center;
+        white-space: nowrap;
+        width: 100%;
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    /* 隐藏原来顶部的工具区（移动到侧边或隐藏） */
+    #user-tools {
+        display: none !important;
+    }
+
+    /* 主内容向右偏移以腾出左侧栏位 */
+    #content, #content-main, .content {
+        margin-left: 84px !important;
+    }
+
+    /* 适配窄屏：将侧边栏改回顶部（保持响应性） */
+    @media (max-width: 900px) {
+        #header {
+            position: relative;
+            width: 100%;
+            height: auto;
+            writing-mode: horizontal-tb;
+            transform: none;
+        }
+
+        #site-name, .header a {
+            writing-mode: horizontal-tb;
+            transform: none;
+        }
+
+        #content, #content-main, .content {
+            margin-left: 0 !important;
+        }
+    }
+    /* admin site 左侧菜单样式 */
+    .admin-leftbar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 120px;
+        background: linear-gradient(135deg, #417690 0%, #2c5aa0 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 16px;
+        z-index: 90;
+    }
+    .admin-leftbar a {
+        color: #fff;
+        text-decoration: none;
+        margin: 8px 0;
+        font-weight: 600;
+        font-size: 14px;
+        text-align: center;
+    }
+    .sidebar-title {
+        color: #fff;
+        font-weight: 700;
+        font-size: 16px;
+        text-align: center;
+        margin-bottom: 24px;
+        line-height: 1.2;
+    }
+    @media (max-width: 900px) {
+        .admin-leftbar { display: none; }
+        #content, #content-main, .content { margin-left: 0 !important; }
+    }
 </style>
+{% endblock %}
+
+{% block nav-global %}
+<div class="admin-leftbar">
+    <div class="sidebar-title">ADMIN<br>PORTAL</div>
+    <a href="{% url 'admin:index' %}">Dashboard</a>
+    <a href="{% url 'admin:music_song_changelist' %}">Manage Songs</a>
+    <a href="{% url 'admin:music_user_changelist' %}">User Management</a>
+</div>
 {% endblock %}
 
 {% block title %}{{ block.super }} - MusicHub管理中心{% endblock %}
