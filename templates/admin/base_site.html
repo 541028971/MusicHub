@@ -99,7 +99,7 @@
     #user-tools {
         display: none !important;
     }
-
+    
     /* 主内容向右偏移以腾出左侧栏位 */
     #content, #content-main, .content {
         margin-left: 84px !important;
@@ -138,6 +138,7 @@
         padding-top: 16px;
         z-index: 90;
     }
+    
     .admin-leftbar a {
         color: #fff;
         text-decoration: none;
@@ -146,6 +147,7 @@
         font-size: 14px;
         text-align: center;
     }
+    
     .sidebar-title {
         color: #fff;
         font-weight: 700;
@@ -154,6 +156,12 @@
         margin-bottom: 24px;
         line-height: 1.2;
     }
+    
+    /* 登录页特殊处理 */
+    body.login #header, body.login .admin-leftbar { display: none !important; }
+    body.login #content, body.login #content-main, body.login .content { margin-left: 0 !important; }
+    
+    /* 响应式 */
     @media (max-width: 900px) {
         .admin-leftbar { display: none; }
         #content, #content-main, .content { margin-left: 0 !important; }
