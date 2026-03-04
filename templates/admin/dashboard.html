@@ -4,6 +4,101 @@
 {% block extrahead %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
+    /* ===== 整体布局 ===== */
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
+    .page-wrapper {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    /* ===== 左侧导航栏 ===== */
+    .sidebar {
+        width: 200px;
+        min-width: 200px;
+        background: linear-gradient(180deg, #1a2744 0%, #2c5aa0 70%, #417690 100%);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 100;
+        box-shadow: 3px 0 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .sidebar-brand {
+        padding: 28px 16px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        text-align: center;
+        user-select: none;
+    }
+
+    .sidebar-brand span {
+        color: #fff;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        line-height: 1.4;
+        display: block;
+    }
+
+    .sidebar-nav {
+        flex: 1;
+        padding: 16px 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar-nav a {
+        color: rgba(255, 255, 255, 0.82) !important;
+        text-decoration: none !important;
+        padding: 11px 20px;
+        font-size: 13px;
+        font-weight: 500;
+        border-left: 3px solid transparent;
+        transition: background 0.2s, border-color 0.2s, color 0.2s;
+        display: block;
+    }
+
+    .sidebar-nav a:hover,
+    .sidebar-nav a.active {
+        background: rgba(255, 255, 255, 0.12);
+        border-left-color: #fff;
+        color: #fff !important;
+    }
+
+    .sidebar-footer {
+        padding: 14px 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.55);
+        text-align: center;
+    }
+
+    .sidebar-footer a {
+        color: rgba(255, 255, 255, 0.7) !important;
+        text-decoration: none !important;
+    }
+
+    .sidebar-footer a:hover {
+        color: #fff !important;
+    }
+
+    /* ===== 主内容区 ===== */
+    .main-content {
+        margin-left: 200px;
+        flex: 1;
+        padding: 28px 28px;
+        background: #f5f7fa;
+        min-height: 100vh;
+        box-sizing: border-box;
+    }
+
+    /* ===== Dashboard 卡片 ===== */
     .dashboard-container {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -13,83 +108,92 @@
 
     .stat-card {
         background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 20px;
+        border: 1px solid #e4e8ef;
+        border-radius: 10px;
+        padding: 24px 20px;
         text-align: center;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        transition: transform 0.2s, box-shadow 0.2s;
     }
 
     .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        transform: translateY(-4px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-card .icon {
+        font-size: 28px;
+        margin-bottom: 10px;
     }
 
     .stat-number {
-        font-size: 36px;
+        font-size: 38px;
         font-weight: bold;
-        color: #417690;
-        margin: 10px 0;
+        color: #2c5aa0;
+        margin: 8px 0;
     }
 
     .stat-label {
-        font-size: 14px;
-        color: #666;
+        font-size: 13px;
+        color: #888;
         text-transform: uppercase;
         font-weight: 500;
+        letter-spacing: 0.5px;
     }
 
+    /* ===== Chart Area ===== */
     .chart-container {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 20px;
-        margin-top: 30px;
+        margin-top: 10px;
     }
 
     .chart-box {
         background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 8px;
+        border: 1px solid #e4e8ef;
+        border-radius: 10px;
         padding: 20px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
 
     .chart-title {
-        font-size: 16px;
+        font-size: 15px;
         font-weight: bold;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
         color: #333;
     }
 
     #userGrowthChart {
-        max-height: 300px;
+        max-height: 280px;
     }
 
     .doughnut-container {
         position: relative;
-        height: 300px;
+        height: 280px;
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
+    /* ===== Newest Members ===== */
     .newest-members {
         background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 8px;
+        border: 1px solid #e4e8ef;
+        border-radius: 10px;
         padding: 20px;
         margin-top: 20px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
 
     .newest-members h3 {
         margin-top: 0;
         color: #333;
+        font-size: 15px;
     }
 
     .member-item {
-        padding: 10px;
+        padding: 10px 4px;
         border-bottom: 1px solid #f0f0f0;
         display: flex;
         justify-content: space-between;
@@ -107,180 +211,165 @@
 
     .member-time {
         font-size: 12px;
-        color: #999;
+        color: #aaa;
     }
 
-    @media (max-width: 768px) {
-        .dashboard-container {
-            grid-template-columns: repeat(2, 1fr);
+    /* Page Title */
+    .page-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1a2744;
+        margin: 0 0 24px 0;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 900px) {
+        .sidebar {
+            display: none;
+        }
+
+        .main-content {
+            margin-left: 0;
         }
 
         .chart-container {
             grid-template-columns: 1fr;
         }
     }
-
-    .stat-card .icon {
-        font-size: 24px;
-        margin-bottom: 10px;
-    }
-    .admin-main {
-        margin-left: 120px;
-        padding: 20px 24px;
-    }
-    @media (max-width: 900px) {
-        .admin-leftbar { display: none; }
-        .admin-main { margin-left: 0; }
-    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="admin-main">
-<h1>仪表板概览</h1>
+<div class="page-wrapper">
 
-<!-- 统计卡片 -->
-<div class="dashboard-container">
-    <!-- 总用户人数 -->
-    <div class="stat-card">
-        <div class="icon">👥</div>
-        <div class="stat-label">总用户人数</div>
-        <div class="stat-number">{{ total_users }}</div>
-        <div style="font-size: 12px; color: #999;">本月新增</div>
-    </div>
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span>MusicHub Admin</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'admin:index' %}" class="active">Dashboard</a>
+            <a href="{% url 'admin:music_song_changelist' %}">Manage Songs</a>
+            <a href="{% url 'admin:music_user_changelist' %}">User Management</a>
+        </nav>
+        <div class="sidebar-footer">
+            {% if user.is_authenticated %}
+            <div style="margin-bottom:6px;">{{ user.username }}</div>
+            <a href="{% url 'admin:logout' %}">Log out</a>
+            {% endif %}
+        </div>
+    </aside>
 
-    <!-- 总歌曲数 -->
-    <div class="stat-card">
-        <div class="icon">🎵</div>
-        <div class="stat-label">总歌曲数</div>
-        <div class="stat-number">{{ total_songs }}</div>
-        <div style="font-size: 12px; color: #999;">音乐库</div>
-    </div>
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <h1 class="page-title">Dashboard Overview</h1>
 
-    <!-- 活跃用户人数 -->
-    <div class="stat-card">
-        <div class="icon">⚡</div>
-        <div class="stat-label">活跃用户人数</div>
-        <div class="stat-number">{{ active_users }}</div>
-        <div style="font-size: 12px; color: #999;">本周活跃</div>
-    </div>
+        <!-- Statistics Cards -->
+        <div class="dashboard-container">
+            <div class="stat-card">
+                <div class="icon">👥</div>
+                <div class="stat-label">Total Users</div>
+                <div class="stat-number">{{ total_users }}</div>
+                <div style="font-size: 12px; color: #999;">New This Month</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">🎵</div>
+                <div class="stat-label">Total Songs</div>
+                <div class="stat-number">{{ total_songs }}</div>
+                <div style="font-size: 12px; color: #999;">Music Library</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">⚡</div>
+                <div class="stat-label">Active Users</div>
+                <div class="stat-number">{{ active_users }}</div>
+                <div style="font-size: 12px; color: #999;">Active This Week</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">📋</div>
+                <div class="stat-label">Reports</div>
+                <div class="stat-number">{{ total_feedbacks }}</div>
+                <div style="font-size: 12px; color: #999;">Pending</div>
+            </div>
+        </div>
 
-    <!-- 举报箱 -->
-    <div class="stat-card">
-        <div class="icon">📋</div>
-        <div class="stat-label">举报箱</div>
-        <div class="stat-number">{{ total_feedbacks }}</div>
-        <div style="font-size: 12px; color: #999;">待处理</div>
-    </div>
-</div>
+        <!-- Chart Area -->
+        <div class="chart-container">
+            <div class="chart-box">
+                <div class="chart-title">User Growth Trend</div>
+                <canvas id="userGrowthChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">New Song Distribution</div>
+                <div class="doughnut-container">
+                    <canvas id="songDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
 
-<!-- 图表区域 -->
-<div class="chart-container">
-    <!-- 用户增长趋势图 -->
-    <div class="chart-box">
-        <div class="chart-title">用户增长趋势</div>
-        <canvas id="userGrowthChart"></canvas>
-    </div>
-
-    <!-- 新增歌曲数量圆形图 -->
-    <div class="chart-box">
-        <div class="chart-title">新增歌曲分布</div>
-        <div class="doughnut-container">
-            <canvas id="songDistributionChart"></canvas>
+        <!-- Newest Members -->
+        <div class="newest-members">
+            <h3>Newest Members</h3>
+            {% for member in newest_members %}
+            <div class="member-item">
+                <span class="member-name">{{ member.username }}</span>
+                <span class="member-time">Just Joined</span>
+            </div>
+            {% empty %}
+            <div class="member-item">No members yet</div>
+            {% endfor %}
         </div>
     </div>
-</div>
 
-<!-- 最新成员 -->
-<div class="newest-members">
-    <h3>最新成员</h3>
-    {% for member in newest_members %}
-        <div class="member-item">
-            <span class="member-name">{{ member.username }}</span>
-            <span class="member-time">刚刚加入</span>
-        </div>
-    {% empty %}
-        <div class="member-item">暂无成员</div>
-    {% endfor %}
 </div>
 
 <script>
-// 用户增长趋势图
-const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
-const userGrowthChart = new Chart(userGrowthCtx, {
-    type: 'bar',
-    data: {
-        labels: {{ date_list|safe }},
-        datasets: [{
-            label: '用户数',
-            data: {{ user_growth|safe }},
-            backgroundColor: '#417690',
-            borderColor: '#2c5aa0',
-            borderWidth: 1,
-            borderRadius: 4,
+    const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
+    const userGrowthChart = new Chart(userGrowthCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ date_list| safe }},
+    datasets: [{
+        label: 'Users',
+        data: {{ user_growth| safe }},
+        backgroundColor: '#417690',
+        borderColor: '#2c5aa0',
+        borderWidth: 1,
+        borderRadius: 4,
         }]
     },
     options: {
         responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-            legend: {
-                display: false,
-            }
-        },
+            maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
         scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    font: {
-                        size: 12
-                    }
-                }
-            },
-            x: {
-                ticks: {
-                    font: {
-                        size: 11
-                    },
-                    maxRotation: 45,
-                    minRotation: 0
-                }
-            }
+            y: { beginAtZero: true, ticks: { font: { size: 12 } } },
+            x: { ticks: { font: { size: 11 }, maxRotation: 45, minRotation: 0 } }
         }
     }
 });
 
-// 新增歌曲分布圆形图
-const songDistributionCtx = document.getElementById('songDistributionChart').getContext('2d');
-const songDistributionChart = new Chart(songDistributionCtx, {
-    type: 'doughnut',
-    data: {
-        labels: ['新增歌曲', '已有歌曲'],
-        datasets: [{
-            data: [{{ new_songs_today }}, {{ remaining_songs }}],
-            backgroundColor: ['#ff6b6b', '#ddd'],
-            borderColor: ['#fff', '#fff'],
-            borderWidth: 2
-        }]
+    const songDistributionCtx = document.getElementById('songDistributionChart').getContext('2d');
+    const songDistributionChart = new Chart(songDistributionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['New Songs', 'Existing Songs'],
+            datasets: [{
+                data: [{{ new_songs_today }}, {{ remaining_songs }}],
+        backgroundColor: ['#ff6b6b', '#ddd'],
+        borderColor: ['#fff', '#fff'],
+        borderWidth: 2
+    }]
     },
     options: {
         responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
+            maintainAspectRatio: true,
+                plugins: {
             legend: {
                 position: 'bottom',
-                labels: {
-                    padding: 15,
-                    font: {
-                        size: 12
-                    }
-                }
+                    labels: { padding: 15, font: { size: 12 } }
             }
         }
     }
 });
 </script>
-
-</div>
-
 {% endblock %}
