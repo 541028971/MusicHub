@@ -27,14 +27,14 @@ class Song(models.Model):
     name = models.CharField(max_length=100) # sname -> name
     album = models.CharField(max_length=100)
     lyrics = models.TextField(default='Pure Music', null=True, blank=True)
-    cover = models.CharField(max_length=100, default='images/Cover')
+    cover = models.ImageField(upload_to='covers/', default='covers/default.jpg')
     arrangement = models.CharField(max_length=100)
     song_type = models.CharField(max_length=100) # stype -> song_type
     introduction = models.TextField(default='No Introduction') # sintroduction -> introduction
     release_date = models.DateField() # release_time -> release_date
-    link = models.CharField(max_length=100)
+    link = models.FileField(upload_to='songs/')
     views = models.IntegerField(default=0)
-    download_link = models.CharField(max_length=100, null=True, blank=True) # download -> download_link
+    download_link = models.FileField(upload_to='songs/downloads/', null=True, blank=True) # download -> download_link
     
     # 取代 favourite 表
     favorited_by = models.ManyToManyField(User, related_name='favorite_songs', blank=True)

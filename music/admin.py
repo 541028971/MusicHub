@@ -66,9 +66,25 @@ class CustomAdminSite(admin.AdminSite):
 # 创建自定义AdminSite的实例
 admin_site = CustomAdminSite(name='admin')
 
+from django.utils.html import format_html
+
+class SongAdmin(admin.ModelAdmin):
+    list_display = ('name', 'album', 'cover_preview', 'song_type', 'release_date')
+    search_fields = ('name', 'album')
+    list_filter = ('song_type', 'release_date')
+    
+    def cover_preview(self, obj):
+        if obj.cover:
+            try:
+                return format_html('<img src="{}" width="50" height="50" style="object-fit:cover; border-radius:4px;" />', obj.cover.url)
+            except ValueError:
+                return "No File"
+        return "No Image"
+    cover_preview.short_description = 'Cover'
+
 # 注册模型到自定义admin site
 admin_site.register(User)
-admin_site.register(Song)
+admin_site.register(Song, SongAdmin)
 admin_site.register(Playlist)
 admin_site.register(Comment)
 admin_site.register(PlayHistory)

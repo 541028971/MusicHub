@@ -9,20 +9,22 @@
         padding: 0;
         box-sizing: border-box;
     }
-    
+
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         min-height: 100vh;
         display: block;
     }
-    /* 隐藏顶部/左侧栏位和header
-       登录页不用展示任何蓝条 */
-    #header, .admin-leftbar {
+
+    /* Hide top/left bars and header
+       Login page shouldn't show any admin bars */
+    #header,
+    .admin-leftbar {
         display: none !important;
     }
 
-    /* 全屏包裹器：确保登录框在视口中央（覆盖可能的侧边栏占位） */
+    /* Fullscreen wrapper to center login box (overrides possible sidebar space) */
     .login-wrapper {
         position: fixed;
         inset: 0;
@@ -32,17 +34,17 @@
         padding: 20px;
         box-sizing: border-box;
     }
-    
+
     #header {
         display: none;
     }
-    
+
     #main {
         background: transparent;
         width: 100%;
         padding: 0;
     }
-    
+
     .login-container {
         background: white;
         border-radius: 12px;
@@ -51,30 +53,30 @@
         width: 100%;
         max-width: 400px;
     }
-    
+
     .login-container h1 {
         text-align: center;
         color: #333;
         margin-bottom: 10px;
         font-size: 28px;
     }
-    
+
     .login-container p {
         text-align: center;
         color: #666;
         margin-bottom: 30px;
         font-size: 14px;
     }
-    
+
     .login-form {
         display: flex;
         flex-direction: column;
     }
-    
+
     .login-form div {
         margin-bottom: 20px;
     }
-    
+
     .login-form label {
         display: block;
         margin-bottom: 8px;
@@ -82,7 +84,7 @@
         font-weight: 500;
         font-size: 14px;
     }
-    
+
     .login-form input[type="text"],
     .login-form input[type="password"] {
         width: 100%;
@@ -92,20 +94,20 @@
         font-size: 14px;
         transition: all 0.3s ease;
     }
-    
+
     .login-form input[type="text"]:focus,
     .login-form input[type="password"]:focus {
         outline: none;
         border-color: #667eea;
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
-    
+
     .submit-row {
         display: flex;
         justify-content: center;
         margin-top: 30px;
     }
-    
+
     .submit-row input[type="submit"] {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
@@ -117,16 +119,16 @@
         cursor: pointer;
         transition: all 0.3s ease;
     }
-    
+
     .submit-row input[type="submit"]:hover {
         transform: translateY(-2px);
         box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
     }
-    
+
     .submit-row input[type="submit"]:active {
         transform: translateY(0);
     }
-    
+
     .errorlist {
         background: #fee;
         border: 1px solid #fcc;
@@ -136,42 +138,42 @@
         color: #c33;
         font-size: 13px;
     }
-    
+
     .errorlist li {
         list-style: none;
         margin-bottom: 5px;
     }
-    
+
     .errorlist li:last-child {
         margin-bottom: 0;
     }
-    
+
     .login-title {
         text-align: center;
         margin-bottom: 40px;
     }
-    
+
     .login-title h2 {
         color: #666;
         font-size: 24px;
         margin-bottom: 5px;
     }
-    
+
     .login-title p {
         color: #999;
         font-size: 13px;
     }
-    
+
     @media (max-width: 600px) {
         body {
             padding: 20px;
         }
-        
+
         .login-container {
             padding: 30px 20px;
             max-width: 100%;
         }
-        
+
         .login-container h1 {
             font-size: 24px;
         }
@@ -182,48 +184,50 @@
 {% block content %}
 <div class="login-wrapper">
     <div class="login-container">
-    <div class="login-title">
-        <h2>🎵 MusicHub</h2>
-        <p>管理员登录</p>
-    </div>
-    
-    {% if form.non_field_errors %}
+        <div class="login-title">
+            <h2>🎵 MusicHub</h2>
+            <p>Admin Login</p>
+        </div>
+
+        {% if form.non_field_errors %}
         <div class="errorlist">
             {% for error in form.non_field_errors %}
-                <li>{{ error }}</li>
+            <li>{{ error }}</li>
             {% endfor %}
         </div>
-    {% endif %}
-    
-    <form method="post" class="login-form">
-        {% csrf_token %}
-        
-        <div>
-            <label for="id_username">用户名：</label>
-            <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" required id="id_username" placeholder="请输入用户名">
-            {% if form.username.errors %}
+        {% endif %}
+
+        <form method="post" class="login-form">
+            {% csrf_token %}
+
+            <div>
+                <label for="id_username">Username:</label>
+                <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username"
+                    maxlength="150" required id="id_username" placeholder="Enter username">
+                {% if form.username.errors %}
                 <span style="color: #c33; font-size: 12px;">{{ form.username.errors.0 }}</span>
-            {% endif %}
-        </div>
-        
-        <div>
-            <label for="id_password">密码：</label>
-            <input type="password" name="password" autocomplete="current-password" required id="id_password" placeholder="请输入密码">
-            {% if form.password.errors %}
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="id_password">Password:</label>
+                <input type="password" name="password" autocomplete="current-password" required id="id_password"
+                    placeholder="Enter password">
+                {% if form.password.errors %}
                 <span style="color: #c33; font-size: 12px;">{{ form.password.errors.0 }}</span>
-            {% endif %}
-        </div>
-        
-        <div class="submit-row">
-            <input type="submit" value="登录">
-        </div>
-    </form>
-    
-    <p style="text-align: center; margin-top: 30px; color: #999; font-size: 12px;">
-        © 2026 MusicHub 管理中心。保留所有权利。
-    </p>
-</div>
+                {% endif %}
+            </div>
+
+            <div class="submit-row">
+                <input type="submit" value="Login">
+            </div>
+        </form>
+
+        <p style="text-align: center; margin-top: 30px; color: #999; font-size: 12px;">
+            © 2026 MusicHub Administration. All rights reserved.
+        </p>
     </div>
+</div>
 </div>
 {% endblock %}
 

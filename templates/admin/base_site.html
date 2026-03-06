@@ -2,17 +2,17 @@
 
 {% block extrahead %}
 <style>
-    /* 隐藏 Django 默认的顶部 header（蓝色条 + "Django administration"） */
+    /* Hide default Django header (blue bar + "Django administration") */
     #header {
         display: none !important;
     }
 
-    /* 隐藏面包屑 */
+    /* Hide breadcrumbs */
     .breadcrumbs {
         display: none !important;
     }
 
-    /* 隐藏 Django 自带侧边搜索栏 */
+    /* Hide default Django sidebar search */
     #nav-sidebar,
     .nav-sidebar,
     #sidebar {
@@ -23,4 +23,4 @@
 
 {% block nav-global %}{% endblock %}
 {% block breadcrumbs %}{% endblock %}
-{% block title %}{{ block.super }} - MusicHub管理中心{% endblock %}
+{% block title %}{{ block.super }} - MusicHub Admin{% endblock %}
