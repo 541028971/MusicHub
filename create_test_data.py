@@ -7,7 +7,7 @@ django.setup()
 from music.models import User, Song, Playlist, PlayHistory, Feedback
 from datetime import datetime, timedelta
 
-# 创建一些测试用户
+# Create test users
 users = []
 for i in range(1, 15):
     user, created = User.objects.get_or_create(
@@ -21,7 +21,7 @@ for i in range(1, 15):
     )
     users.append(user)
 
-# 创建一些测试歌曲
+# Create test songs
 songs = []
 song_types = ['Pop', 'Rock', 'Jazz', 'Classical', 'Hip-Hop']
 for i in range(1, 21):
@@ -38,7 +38,7 @@ for i in range(1, 21):
     )
     songs.append(song)
 
-# 创建一些播放历史
+# Create test play history
 for user in users[:10]:
     for song in songs[:5]:
         PlayHistory.objects.get_or_create(
@@ -47,7 +47,7 @@ for user in users[:10]:
             defaults={'played_at': datetime.now()}
         )
 
-# 创建一些反馈
+# Create test feedback
 for i in range(1, 5):
     Feedback.objects.get_or_create(
         sender=users[i],
@@ -55,7 +55,7 @@ for i in range(1, 5):
         defaults={'content': f'Feedback {i}', 'created_at': datetime.now()}
     )
 
-print(f"创建了 {User.objects.count()} 个用户")
-print(f"创建了 {Song.objects.count()} 首歌曲") 
-print(f"创建了 {PlayHistory.objects.count()} 条播放历史")
-print(f"创建了 {Feedback.objects.count()} 条反馈")
+print(f"Created {User.objects.count()} users")
+print(f"Created {Song.objects.count()} songs") 
+print(f"Created {PlayHistory.objects.count()} play history records")
+print(f"Created {Feedback.objects.count()} feedbacks")
