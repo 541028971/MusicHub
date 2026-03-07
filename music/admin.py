@@ -25,17 +25,17 @@ class CustomAdminSite(admin.AdminSite):
         # User growth trend (Last 30 days)
         today = datetime.now().date()
         date_list = []
+        user_growth_data = []
         
         for i in range(29, -1, -1):
             date = today - timedelta(days=i)
             date_list.append(date.strftime("%m-%d"))
+            # Count users who joined on or before this date
+            count = User.objects.filter(date_joined__date__lte=date).count()
+            user_growth_data.append(count)
         
-        # Use mock data to display chart (since User model has no created_at field)
-        user_growth_data = [12, 15, 18, 22, 25, 28, 32, 35, 38, 45, 52, 58, 65, 72, 80, 
-                           88, 95, 110, 125, 140, 160, 180, 200, 220, 240, 250, 280, 310, 350, total_users]
-        
-        # New songs today data (Use mock data)
-        new_songs_today = max(1, (total_songs % 10) + 2) if total_songs > 0 else 5
+        # New songs today data
+        new_songs_today = Song.objects.filter(release_date=today).count()
         remaining_songs = max(total_songs - new_songs_today, 0)
         
         # Newest members

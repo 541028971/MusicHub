@@ -9,6 +9,7 @@ class User(models.Model):
     username = models.CharField(max_length=100)
     password = models.CharField(max_length=100)
     avatar = models.ImageField(upload_to='avatars/', default='avatars/default.jpeg')
+    date_joined = models.DateTimeField(auto_now_add=True, null=True)
     birth = models.DateField(null=True, blank=True)
     identity = models.CharField(max_length=100)
     status = models.CharField(max_length=100)
