@@ -2,6 +2,23 @@ from django.db import models
 from django.contrib.auth.models import User as AuthUser
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+import os
+import re
+
+def song_cover_path(instance, filename):
+    ext = filename.split('.')[-1]
+    # Keep alphanumeric characters including Unicode (Chinese, Japanese, etc.)
+    # Replace anything else with an underscore
+    safe_name = re.sub(r'[^\w\s-]', '', instance.name).strip().replace(' ', '_')
+    # Add ID for uniqueness if available
+    prefix = f"{instance.id}_" if instance.id else ""
+    return os.path.join('covers', f"{prefix}{safe_name}.{ext}")
+
+def song_audio_path(instance, filename):
+    ext = filename.split('.')[-1]
+    safe_name = re.sub(r'[^\w\s-]', '', instance.name).strip().replace(' ', '_')
+    prefix = f"{instance.id}_" if instance.id else ""
+    return os.path.join('songs', f"{prefix}{safe_name}.{ext}")
 
 # 1. User 模型
 class User(models.Model):
@@ -27,17 +44,29 @@ class Song(models.Model):
     name = models.CharField(max_length=100) # sname -> name
     album = models.CharField(max_length=100)
     lyrics = models.TextField(default='Pure Music', null=True, blank=True)
-    cover = models.ImageField(upload_to='covers/', default='covers/default.jpg')
+    cover = models.ImageField(upload_to=song_cover_path, default='covers/default.jpg')
     arrangement = models.CharField(max_length=100)
     song_type = models.CharField(max_length=100) # stype -> song_type
     introduction = models.TextField(default='No Introduction') # sintroduction -> introduction
     release_date = models.DateField() # release_time -> release_date
-    link = models.FileField(upload_to='songs/')
     views = models.IntegerField(default=0)
-    download_link = models.FileField(upload_to='songs/downloads/', null=True, blank=True) # download -> download_link
+    download_link = models.FileField(upload_to=song_audio_path, null=True, blank=True) # download -> download_link
     
     # 取代 favourite 表
     favorited_by = models.ManyToManyField(User, related_name='favorite_songs', blank=True)
+
+    def save(self, *args, **kwargs):
+        # Handle file cleanup if the name changed or replacement occurred
+        if self.pk:
+            try:
+                old_song = Song.objects.get(pk=self.pk)
+                if old_song.name != self.name:
+                    # Logic here could rename physical files, but Django ImageField usually needs manual move
+                    # For now, let's keep it simple: new uploads will follow the new name.
+                    pass
+            except Song.DoesNotExist:
+                pass
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

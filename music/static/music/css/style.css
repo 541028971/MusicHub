@@ -21,6 +21,8 @@ body {
     font-family: 'Open Sans', sans-serif;
     font-size: 100%;
     background: #fff;
+    padding-top: 65px;
+    /* Offset for fixed header */
 }
 
 body a {
@@ -34,6 +36,11 @@ body a {
 .header {
     background: #00C78A;
     padding: 1em 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
 }
 
 .logo {
@@ -1269,7 +1276,7 @@ ul.tags_images {
 .register-top-grid span,
 .register-bottom-grid span {
     font-size: 1em;
-    color: #ddd;
+    color: #555;
     display: block;
     margin-bottom: 0.5em;
 }
@@ -1280,14 +1287,14 @@ ul.tags_images {
 .register-top-grid input[type="file"],
 .register-top-grid input[type="password"],
 .register-bottom-grid input[type="password"] {
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid #DFDFDF;
     outline-color: #00C78A;
     width: 100%;
     box-sizing: border-box;
     font-size: 0.95em;
     padding: 0.6em;
-    color: #fff;
-    background: rgba(255, 255, 255, 0.1);
+    color: #555;
+    background: #FFF;
     border-radius: 4px;
     transition: all 0.3s ease;
 }

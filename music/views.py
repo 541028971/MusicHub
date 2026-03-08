@@ -1,17 +1,27 @@
 import os
+import re
 import base64
+import mimetypes
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib.auth.models import User as AuthUser
 from django.contrib import messages
+from django.http import StreamingHttpResponse, Http404, HttpResponse
 from .models import Song, User as CustomUser
 from .forms import UserRegistrationForm, UserProfileUpdateForm
 
 def index(request):
-    random_song = Song.objects.order_by('?').first()
-    return render(request, 'music/index.html', {'random_song': random_song})
+    # For now we'll simulate 'Top Trending' and 'Recently Added' by ordering
+    top_trending = list(Song.objects.all()[:12]) # In real app, order by likes or plays
+    recently_added = list(Song.objects.order_by('-id')[:12])
+    
+    context = {
+        'top_trending': top_trending,
+        'recently_added': recently_added,
+    }
+    return render(request, 'music/index.html', context)
 
 def login_view(request):
     if request.method == 'POST':
@@ -179,3 +189,70 @@ def song_detail_view(request, pk):
         'song': song,
     }
     return render(request, 'music/song_detail.html', context)
+
+
+def serve_media(request, path):
+    """
+    Custom view to serve media files with Range (Partial Content) support.
+    This fixes seeking issues in browsers like Chrome/Edge when using Django runserver.
+    """
+    # Security: Ensure path doesn't try to go outside media root
+    normalized_path = os.path.normpath(path).lstrip(os.sep).lstrip('/')
+    file_path = os.path.join(settings.MEDIA_ROOT, normalized_path)
+    
+    if not os.path.exists(file_path) or os.path.isdir(file_path):
+        raise Http404("Media file not found.")
+
+    range_header = request.META.get('HTTP_RANGE', '').strip()
+    size = os.path.getsize(file_path)
+    content_type, encoding = mimetypes.guess_type(file_path)
+    content_type = content_type or 'application/octet-stream'
+
+    if range_header:
+        # Basic Range parsing: "bytes=start-end"
+        try:
+            range_match = re.match(r'bytes=(\d+)-(\d*)', range_header)
+            if range_match:
+                start = int(range_match.group(1))
+                end = range_match.group(2)
+                end = int(end) if end else size - 1
+            else:
+                start, end = 0, size - 1
+        except (AttributeError, ValueError):
+            start, end = 0, size - 1
+
+        if start >= size:
+            return HttpResponse(status=416) # Range Not Satisfiable
+
+        content_length = end - start + 1
+        
+        def file_iterator(f_path, f_start, f_end, chunk_size=8192):
+            with open(f_path, 'rb') as f:
+                f.seek(f_start)
+                remaining = f_end - f_start + 1
+                while remaining > 0:
+                    chunk = f.read(min(chunk_size, remaining))
+                    if not chunk:
+                        break
+                    yield chunk
+                    remaining -= len(chunk)
+
+        response = StreamingHttpResponse(file_iterator(file_path, start, end), status=206, content_type=content_type)
+        response['Content-Length'] = str(content_length)
+        response['Content-Range'] = f'bytes {start}-{end}/{size}'
+        response['Accept-Ranges'] = 'bytes'
+        return response
+
+    # No range header, serve normally
+    def full_file_iterator(f_path, chunk_size=8192):
+        with open(f_path, 'rb') as f:
+            while True:
+                chunk = f.read(chunk_size)
+                if not chunk:
+                    break
+                yield chunk
+
+    response = StreamingHttpResponse(full_file_iterator(file_path), content_type=content_type)
+    response['Content-Length'] = str(size)
+    response['Accept-Ranges'] = 'bytes'
+    return response

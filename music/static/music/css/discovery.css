@@ -1,0 +1,761 @@
+/* Shared Discovery & Library Glassmorphic Styles */
+
+/* Prevent the entire page from scrolling, enforce app layout */
+/* Make sure html and body are 100vh without overflow */
+html,
+body {
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0 !important;
+    /* Override style.css padding-top */
+}
+
+/* Master App Layout Container */
+.app-layout {
+    display: flex;
+    flex-direction: row;
+    /* Sidebar on left, main on right */
+    height: calc(100vh - 80px);
+    /* Leave room for the persistent audio player */
+    width: 100vw;
+    background: url("../images/1.jpg") no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+    overflow: hidden;
+}
+
+.app-layout::before {
+    content: "";
+    /* Master dark overlay over the whole app background */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.app-layout>* {
+    position: relative;
+    z-index: 1;
+}
+
+/* Main Content Column (Header + Scrollable Area) */
+.main-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    /* Only the inner scrollable area should scroll */
+}
+
+/* Glassmorphic Sidebar */
+.glass-sidebar {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    height: 100%;
+    color: #fff;
+    width: 250px;
+    flex: 0 0 250px;
+    /* Fixed width, no flex grow/shrink */
+    overflow-y: auto;
+    /* Scrollable if playlists exceed height */
+    overflow-x: hidden;
+}
+
+.glass-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.glass-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.glass-sidebar h4 {
+    color: #4CAF50;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sidebar-pill {
+    display: block;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.sidebar-pill:hover,
+.sidebar-pill.active {
+    background: rgba(76, 175, 80, 0.2);
+    color: #fff;
+    border: 1px solid rgba(76, 175, 80, 0.5);
+    text-decoration: none;
+}
+
+/* Selective Flexbox for perfect icon centering (used on Featured) */
+.sidebar-pill.flex-align {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar-pill.flex-align svg {
+    flex-shrink: 0;
+}
+
+/* Glass Logo Area */
+.sidebar-logo {
+    padding: 20px 20px 10px 20px;
+}
+
+.sidebar-logo h1 {
+    font-size: 26px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin: 0;
+    font-family: 'Quicksand', sans-serif;
+    letter-spacing: 1px;
+}
+
+@keyframes neon-glow {
+    from {
+        text-shadow:
+            0 0 5px #fff,
+            0 0 10px #fff,
+            0 0 20px #00C78A,
+            0 0 35px #00C78A,
+            0 0 40px #00C78A,
+            0 0 50px #00C78A;
+    }
+
+    to {
+        text-shadow:
+            0 0 10px #fff,
+            0 0 20px #fff,
+            0 0 35px #00C78A,
+            0 0 45px #00C78A,
+            0 0 50px #00C78A,
+            0 0 70px #00C78A,
+            0 0 80px #00C78A;
+    }
+}
+
+.sidebar-logo h1 a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 800;
+    letter-spacing: 2px;
+    animation: neon-glow 1.5s ease-in-out infinite alternate;
+    transition: all 0.3s ease;
+}
+
+.sidebar-logo h1 a:hover {
+    color: #fff;
+    opacity: 0.9;
+}
+
+.sidebar-menu {
+    padding: 10px 20px 30px 20px;
+}
+
+/* Override global header inside main-column */
+.main-column .header {
+    flex: 0 0 65px;
+    height: 65px;
+    background: #00C78A;
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    padding: 0 30px;
+    position: static;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Main Content Area */
+.main-scrollable-area {
+    padding: 30px 40px 100px 40px;
+    /* Extra bottom padding for comfortable scrolling */
+    color: #fff;
+    flex: 1;
+    /* Take up remaining space */
+    height: 100%;
+    overflow-y: auto;
+    /* Independent scrolling for main area */
+    overflow-x: hidden;
+}
+
+.main-scrollable-area::-webkit-scrollbar {
+    width: 8px;
+}
+
+.main-scrollable-area::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.main-scrollable-area::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.main-scrollable-area::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.glass-search input.form-control {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-radius: 20px;
+    padding: 10px 20px;
+}
+
+.glass-search input.form-control:focus {
+    border-color: #4CAF50;
+    outline: none;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.glass-search .btn {
+    background: #4CAF50;
+    border: none;
+    color: white;
+    border-radius: 20px;
+    padding: 6px 20px;
+    transition: all 0.3s;
+}
+
+.glass-search .btn:hover {
+    background: #45a049;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+}
+
+/* Glassmorphic Song Cards & Grid */
+.music-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+    max-width: 1500px;
+}
+
+.glass-card {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1;
+    height: 100%;
+    max-width: 260px;
+}
+
+.glass-card.menu-active {
+    z-index: 100;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.glass-card:hover {
+    border-color: rgba(76, 175, 80, 0.5);
+}
+
+.card-img-wrapper {
+    position: relative;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    border-radius: 11px 11px 0 0;
+}
+
+.card-img-wrapper::before {
+    content: "";
+    display: block;
+    padding-top: 100%;
+}
+
+.card-img-wrapper img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease, filter 0.3s ease;
+}
+
+.play-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+    color: #4CAF50;
+    font-size: 3rem;
+    transition: all 0.3s ease;
+    text-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.play-overlay .pause-icon {
+    display: none;
+}
+
+/* Ensure the overlay is ONLY visible on hover, even if the song is playing */
+.glass-card:hover .play-overlay {
+    opacity: 1 !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+}
+
+.glass-card.is-playing .play-overlay .play-icon {
+    display: none;
+}
+
+.glass-card.is-playing .play-overlay .pause-icon {
+    display: block;
+}
+
+/* Global Progress Bar Styling */
+.progress-wrapper {
+    position: absolute;
+    top: -12px;
+    /* Larger hit area to prevent flickering */
+    left: 0;
+    width: 100%;
+    height: 12px;
+    background: transparent;
+    cursor: pointer;
+    z-index: 10001;
+}
+
+.progress-wrapper::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: height 0.2s ease;
+}
+
+/* Prevent text selection and cursor issues globally during drag */
+body.is-dragging-progress {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    cursor: grabbing !important;
+}
+
+.progress-wrapper:hover::before {
+    height: 8px;
+}
+
+.progress-current {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: #00C78A;
+    width: 0%;
+    /* Transition removed to eliminate 'following' lag */
+    pointer-events: none;
+}
+
+.progress-wrapper:hover .progress-current {
+    height: 8px;
+}
+
+.progress-knob {
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    /* Center within the current bar height */
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(0, 199, 138, 0.5);
+    display: none;
+    pointer-events: none;
+}
+
+.progress-wrapper:hover .progress-knob {
+    display: block;
+}
+
+.time-display {
+    position: absolute;
+    right: 0;
+    top: -35px;
+    transform: translateX(50%);
+    background: rgba(255, 255, 255, 0.98);
+    color: #111;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 800;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    display: none;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 10002;
+}
+
+.progress-wrapper:hover .time-display {
+    display: block;
+}
+
+.card-info {
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 0 0 11px 11px;
+}
+
+.card-text {
+    overflow: hidden;
+    flex-grow: 1;
+    padding-right: 5px;
+    min-width: 0;
+}
+
+.card-text h5 {
+    margin: 0 0 6px 0;
+    font-size: 1.15em;
+    font-weight: 600;
+    overflow: hidden;
+}
+
+.song-title-wrapper {
+    position: relative;
+    overflow: hidden;
+    height: 1.3em;
+    width: 100%;
+    display: block;
+}
+
+.song-title-wrapper.is-overflowing {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10px, black calc(100% - 10px), transparent);
+    mask-image: linear-gradient(to right, transparent, black 10px, black calc(100% - 10px), transparent);
+}
+
+.song-title-marquee {
+    display: block;
+    width: 100%;
+}
+
+.song-title-link {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #fff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.song-title-wrapper.is-overflowing .song-title-marquee {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: max-content;
+    display: flex;
+    animation: marquee 12s linear infinite;
+}
+
+.song-title-wrapper.is-overflowing .song-title-link {
+    display: inline-block;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.song-title-wrapper:hover .song-title-marquee {
+    animation-play-state: paused;
+}
+
+.song-title-marquee a {
+    color: #fff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.song-title-marquee a:hover {
+    color: #4CAF50;
+}
+
+.card-text p {
+    margin: 0;
+    font-size: 0.9em;
+    color: rgba(255, 255, 255, 0.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-actions {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.card-action-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.2rem;
+    padding: 5px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    outline: none;
+}
+
+.card-action-btn:hover {
+    color: #00C78A;
+}
+
+.like-btn:hover {
+    color: #ff4444;
+    transform: scale(1.2);
+}
+
+.like-btn .bi-heart-fill {
+    display: none;
+}
+
+.like-btn:hover .bi-heart {
+    display: none;
+}
+
+.like-btn:hover .bi-heart-fill {
+    display: inline-block;
+}
+
+.download-btn:hover {
+    color: #00C78A;
+    transform: scale(1.1);
+}
+
+/* Dropdown */
+.menu-container {
+    position: relative;
+}
+
+.glass-menu {
+    position: absolute;
+    top: -10px;
+    left: calc(100% + 15px);
+    right: auto;
+    min-width: 190px;
+    background: rgba(28, 28, 28, 0.96);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    padding: 8px 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-15px) scale(0.92);
+    transform-origin: top left;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1000;
+}
+
+.glass-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0) scale(1);
+}
+
+@media (min-width: 1200px) {
+    .col-lg-3:nth-child(4n) .glass-menu {
+        left: auto;
+        right: calc(100% + 5px);
+        transform-origin: top right;
+        transform: translateX(10px) scale(0.95);
+    }
+
+    .col-lg-3:nth-child(4n) .glass-menu.show {
+        transform: translateX(0) scale(1);
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .col-md-4:nth-child(3n) .glass-menu {
+        left: auto;
+        right: calc(100% + 5px);
+        transform-origin: top right;
+        transform: translateX(10px) scale(0.95);
+    }
+
+    .col-md-4:nth-child(3n) .glass-menu.show {
+        transform: translateX(0) scale(1);
+    }
+}
+
+@media (max-width: 991px) {
+    .col-sm-6:nth-child(2n) .glass-menu {
+        left: auto;
+        right: calc(100% + 5px);
+        transform-origin: top right;
+        transform: translateX(10px) scale(0.95);
+    }
+
+    .col-sm-6:nth-child(2n) .glass-menu.show {
+        transform: translateX(0) scale(1);
+    }
+}
+
+.glass-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #FFFFFF !important;
+    text-decoration: none !important;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-align: left;
+    white-space: nowrap;
+    position: relative;
+    border-left: 3px solid transparent;
+}
+
+.glass-menu-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #00C78A !important;
+    border-left-color: #00C78A;
+    padding-left: 22px;
+}
+
+.glass-menu-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 5px 0;
+}
+
+@keyframes marquee {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+/* Shelf specific styling */
+.shelf-title {
+    font-size: 1.5rem;
+    font-weight: 300;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+    color: #fff;
+}
+
+.genre-card {
+    height: 120px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    transition: transform 0.3s;
+    margin-bottom: 20px;
+}
+
+.genre-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    transition: background 0.3s;
+}
+
+.genre-card:hover {
+    transform: scale(1.03);
+    text-decoration: none;
+    color: #fff;
+}
+
+.genre-card:hover::before {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.genre-card span {
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+/* Pagination Glass styling */
+.pagination>li>a,
+.pagination>li>span {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.pagination>li>a:hover {
+    background: rgba(76, 175, 80, 0.4);
+    border-color: #4CAF50;
+    color: #fff;
+}
+
+.pagination>.active>span {
+    background: #4CAF50;
+    border-color: #4CAF50;
+    color: #fff;
+}
+
+.pagination>.disabled>span {
+    background: rgba(0, 0, 0, 0.3);
+    color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.05);
+}

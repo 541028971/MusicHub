@@ -1,4 +1,5 @@
 {% load static %}
+<!-- SERVER CACHE BUSTER -->
 <!DOCTYPE HTML>
 <html>
 
@@ -20,7 +21,8 @@
 
     <!-- Load CSS with Django static tags -->
     <link href="{% static 'music/css/bootstrap.css' %}" rel='stylesheet' type='text/css' />
-    <link href="{% static 'music/css/style.css' %}?v=1.6.5" rel='stylesheet' type='text/css' />
+    <link href="{% static 'music/css/style.css' %}?v=3.0" rel='stylesheet' type='text/css' />
+    <link href="{% static 'music/css/discovery.css' %}?v=3.0" rel='stylesheet' type='text/css' />
 
     <!-- Webfonts -->
     <link href='http://fonts.googleapis.com/css?family=Quicksand:300,400,700' rel='stylesheet' type='text/css'>
@@ -28,141 +30,1189 @@
 
     <!-- JS via static tags -->
     <script type="text/javascript" src="{% static 'music/js/jquery-1.11.1.min.js' %}"></script>
-    <script src="{% static 'music/js/menu_jquery.js' %}"></script>
+    <script src="{% static 'music/js/menu_jquery.js' %}?v=1.1"></script>
+
+    <style>
+        /* Global Persistent Audio Player */
+        body {
+            padding-bottom: 90px;
+            /* Space for the fixed player */
+        }
+
+        .global-player {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: rgba(18, 18, 18, 0.98);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            color: #fff;
+            font-family: 'Open Sans', sans-serif;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .player-left {
+            display: flex;
+            align-items: center;
+            width: 30%;
+            min-width: 200px;
+        }
+
+        .player-cover {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            margin-right: 15px;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .player-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .player-info {
+            display: flex;
+            flex-direction: column;
+            margin-right: 20px;
+            overflow: hidden;
+        }
+
+        .player-title {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+
+        .rotating-disc {
+            animation: rotate 10s linear infinite;
+        }
+
+        .rotating-disc.paused {
+            animation-play-state: paused;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Advanced Vertical Volume Slider */
+        .volume-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        .volume-popover {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 150px;
+            background: rgba(28, 28, 28, 0.95);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .volume-container:hover .volume-popover {
+            opacity: 1;
+            visibility: visible;
+            margin-bottom: 20px;
+        }
+
+        .volume-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 4px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            outline: none;
+            writing-mode: bt-lr;
+            /* Bottom to top */
+            -webkit-appearance: slider-vertical;
+        }
+
+        .volume-percentage {
+            font-size: 11px;
+            color: #00C78A;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+
+        .player-artist {
+            font-size: 12px;
+            color: #999;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-left-actions {
+            display: flex;
+            gap: 15px;
+            color: #999;
+        }
+
+        .player-like-btn {
+            cursor: pointer;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .player-like-btn:hover {
+            color: #ff4444;
+        }
+
+        .player-like-btn .bi-heart-fill {
+            display: none;
+        }
+
+        .player-like-btn:hover .bi-heart {
+            display: none;
+        }
+
+        .player-like-btn:hover .bi-heart-fill {
+            display: inline-block;
+        }
+
+        .player-left-actions svg {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .player-left-actions>svg:hover {
+            color: #fff;
+        }
+
+        /* Center Controls */
+        .player-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 25px;
+            flex: 1;
+        }
+
+        .player-btn {
+            background: none;
+            border: none;
+            color: #b3b3b3;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .player-btn:hover {
+            color: #fff;
+        }
+
+        .player-play-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: #4CAF50;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .player-play-btn:hover {
+            transform: scale(1.05);
+            background: #45a049;
+            color: #fff;
+        }
+
+        /* Right Controls */
+        .player-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            width: 30%;
+            gap: 20px;
+            color: #b3b3b3;
+        }
+
+        .player-right-action {
+            cursor: pointer;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            border: none;
+            background: none;
+            color: inherit;
+            position: relative;
+            outline: none;
+        }
+
+        .player-right-action:hover {
+            color: #fff;
+        }
+
+        .player-badge {
+            border: 1px solid #777;
+            border-radius: 4px;
+            font-size: 10px;
+            padding: 2px 5px;
+            line-height: 1;
+        }
+
+        /* Fixed Upward Menu for the player */
+        .player-menu-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .player-glass-menu {
+            position: absolute;
+            bottom: calc(100% + 20px);
+            right: 0;
+            min-width: 160px;
+            background: rgba(25, 25, 25, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7);
+            padding: 5px 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px) scale(0.95);
+            transform-origin: bottom right;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 10001;
+        }
+
+        .player-glass-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .player-menu-item {
+            display: block;
+            padding: 10px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .player-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            text-decoration: none;
+        }
+    </style>
+
+    {% block extra_head %}{% endblock %}
 </head>
 
 <body>
-    <div class="header">
-        <div class="container">
-            <div class="logo">
-                <!-- Ensure URL links connect to Django views correctly -->
+    <!-- App Shell Layout -->
+    <div class="app-layout">
+
+        <!-- Fixed Left Sidebar -->
+        <nav class="glass-sidebar">
+            <div class="sidebar-logo">
                 <h1><a href="{% url 'music:index' %}">Music Hub</a></h1>
             </div>
-            <div class="top_right">
+
+            <div class="sidebar-menu">
+                <h4>Discovery</h4>
+                <a href="{% url 'music:index' %}"
+                    class="sidebar-pill flex-align {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#FFD700" viewBox="0 0 16 16">
+                        <path
+                            d="M8 1.5L1.5 6.5V13c0 .8.65 1.5 1.5 1.5h10c.85 0 1.5-.7 1.5-1.5V6.5L8 1.5z M8.5 6v4a.5.5 0 0 1-1 0V6a.5.5 0 0 1 1 0z" />
+                    </svg>
+                    <span>Featured</span>
+                </a>
+
                 {% if request.user.is_authenticated %}
-                <!-- Logged In View (replaces indexL.php & userprofile.php) -->
-                <ul>
-                    <li class='login'>
-                        <div id='loginContainer'>
-                            <!-- Use user avatar if we have a profile mechanism, or default for now -->
-                            <a href="#" id="loginButton"
-                                style="display: inline-block; width: 28px; height: 28px; border-radius: 50%; overflow: hidden; vertical-align: middle; margin: 0 5px; padding: 0; outline: none; border: 2px solid rgba(255,255,255,0.2);">
-                                <img src="{% static 'music/images/Avatar/' %}{{ request.user.username }}.png"
-                                    style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar"
-                                    onerror="this.onerror=null; this.src='/static/music/images/Avatar/default.jpeg';" />
-                            </a>
-                            <div id='loginBox'>
-                                <form id='loginForm'>
-                                    <fieldset id='body'>
-                                        <fieldset>
-                                            <span
-                                                style="display: block; text-align: center; padding: 10px 0; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 5px;">
-                                                <b>{{ request.user.username }}</b>
-                                            </span>
-                                        </fieldset>
-                                        <fieldset>
-                                            <span><a href='#' id='loginButton'>Dashboard</a></span>
-                                        </fieldset>
-                                        <fieldset>
-                                            <span><a href='#' id='loginButton'>Announcement</a></span>
-                                        </fieldset>
-                                        <fieldset>
-                                            <span><a href='#' id='loginButton'>All Musics</a></span>
-                                        </fieldset>
-                                        <fieldset>
-                                            <span><a href='#' id='loginButton'>Playlists</a></span>
-                                        </fieldset>
-                                        <fieldset>
-                                            <span><a href='#' id='loginButton'>Favourites</a></span>
-                                        </fieldset>
-                                        <fieldset>
-                                            <span><a href='#' id='loginButton'>History</a></span>
-                                        </fieldset>
-                                        <fieldset>
-                                            <span><a href='#' id='loginButton'>Comment</a></span>
-                                        </fieldset>
-                                        <fieldset>
-                                            <span><a href='#' id='loginButton'>Feedback</a></span>
-                                        </fieldset>
-
-                                        <!-- Dynamic links based on identity (Manager only as requested) -->
-                                        {% if request.user.custom_user.identity == 'Manager' %}
-                                        <fieldset>
-                                            <span><a href='#' id='loginButton'>Management</a></span>
-                                        </fieldset>
-                                        <fieldset>
-                                            <span><a href='#' id='loginButton'>Upload Music</a></span>
-                                        </fieldset>
-                                        {% endif %}
-
-                                        <fieldset>
-                                            <span><a href="{% url 'music:logout' %}" id="loginButton">Log Out</a></span>
-                                        </fieldset>
-                                    </fieldset>
-                                </form>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-                {% else %}
-                <!-- Logged Out View (replaces index.php) -->
-                <ul>
-                    <li><a href="{% url 'music:register' %}">Register</a></li>
-                    |
-                    <li class="login">
-                        <div id="loginContainer"><a href="#" id="loginButton"><span>Login</span></a>
-                            <div id="loginBox">
-                                <form id="loginForm" action="{% url 'music:login' %}" method="POST">
-                                    {% csrf_token %}
-                                    <fieldset id="body">
-                                        <!-- Display Error Messages -->
-                                        {% if messages %}
-                                        {% for message in messages %}
-                                        <div
-                                            style="color: #ff4444; font-size: 12px; margin-bottom: 10px; text-align: center;">
-                                            {{ message }}
-                                        </div>
-                                        {% endfor %}
-                                        {% endif %}
-
-                                        <fieldset>
-                                            <label for="username">Username</label>
-                                            <input type="text" name="uname" id="uname">
-                                        </fieldset>
-                                        <fieldset>
-                                            <label for="password">Password</label>
-                                            <input type="password" name="password" id="password">
-                                        </fieldset>
-                                        <input type="submit" id="login" value="Sign in">
-                                        <label for="checkbox"><input type="checkbox" id="checkbox"> <i>Remember
-                                                me</i></label>
-                                    </fieldset>
-                                    <span><a href="#">Forgot your password?</a></span>
-                                </form>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
+                <h4 style="margin-top: 40px;">My Playlists</h4>
+                <a href="#" class="sidebar-pill">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#ff4444"
+                        class="bi bi-heart-fill" viewBox="0 0 16 16" style="margin-right: 8px; vertical-align: -2px;">
+                        <path fill-rule="evenodd"
+                            d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z" />
+                    </svg>Favourite Music
+                </a>
+                <a href="#" class="sidebar-pill">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                        class="bi bi-clock" viewBox="0 0 16 16" style="margin-right: 8px; vertical-align: -2px;">
+                        <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z" />
+                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z" />
+                    </svg>Recently Played
+                </a>
                 {% endif %}
             </div>
-            <div class="clearfix"></div>
+        </nav>
+
+        <!-- Main Content Column -->
+        <div class="main-column">
+
+            <!-- Fixed Top Header -->
+            <header class="header">
+                <div class="header-container"
+                    style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <!-- Global Search Bar in Header -->
+                    <div class="global-search-container" style="flex: 1 1 auto; max-width: 500px; margin-right: 30px;">
+                        <form action="{% url 'music:library' %}" method="get"
+                            style="width: 100%; display: flex; position: relative;">
+                            <input type="text" name="q" placeholder="Search for title, album, artist..."
+                                style="width: 100%; padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: #fff; outline: none; transition: all 0.3s;"
+                                onfocus="this.style.borderColor='#4CAF50'; this.style.boxShadow='0 0 10px rgba(76, 175, 80, 0.3)';"
+                                onblur="this.style.borderColor='rgba(255,255,255,0.2)'; this.style.boxShadow='none';" />
+                            <button type="submit"
+                                style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #4CAF50;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    viewBox="0 0 16 16">
+                                    <path
+                                        d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="top_right" style="flex: 0 0 auto; display: flex; align-items: center; height: 100%;">
+                        {% if request.user.is_authenticated %}
+                        <!-- Logged In View -->
+                        <ul style="display: flex; align-items: center; list-style: none; margin: 0; padding: 0;">
+                            <li class='login'>
+                                <div id='loginContainer' style="display: flex; align-items: center;">
+                                    <a href="#" id="loginButton"
+                                        style="display: inline-block; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; margin: 0; padding: 0; outline: none; border: 2px solid rgba(255,255,255,0.3);">
+                                        <img src="{% static 'music/images/Avatar/' %}{{ request.user.username }}.png"
+                                            style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar"
+                                            onerror="this.onerror=null; this.src='/static/music/images/Avatar/default.jpeg';" />
+                                    </a>
+                                    <div id='loginBox'>
+                                        <form id='loginForm'>
+                                            <fieldset id='body'>
+                                                <fieldset>
+                                                    <span
+                                                        style="display: block; text-align: center; padding: 10px 0; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 5px;">
+                                                        <b>{{ request.user.username }}</b>
+                                                    </span>
+                                                </fieldset>
+                                                <fieldset><span><a href='#' id='loginButton'>Dashboard</a></span>
+                                                </fieldset>
+                                                <fieldset><span><a href='#' id='loginButton'>Announcement</a></span>
+                                                </fieldset>
+                                                <!-- Dynamic links -->
+                                                {% if request.user.custom_user.identity == 'Manager' %}
+                                                <fieldset><span><a href='#' id='loginButton'>Management</a></span>
+                                                </fieldset>
+                                                {% endif %}
+                                                <fieldset><span><a href="{% url 'music:logout' %}" id="loginButton">Log
+                                                            Out</a></span></fieldset>
+                                            </fieldset>
+                                        </form>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                        {% else %}
+                        <!-- Logged Out View -->
+                        <ul
+                            style="display: flex; align-items: center; list-style: none; margin: 0; padding: 0; gap: 10px;">
+                            <li class="login" style="margin: 0;">
+                                <a href="#" id="openLoginModal"
+                                    style="display: block; padding: 5px 0; outline: none; text-decoration: none; color: rgba(255,255,255,0.8); transition: color 0.3s;"
+                                    onmouseover="this.style.color='#fff'"
+                                    onmouseout="this.style.color='rgba(255,255,255,0.8)'"><span>Login</span></a>
+                            </li>
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </header>
+
+            <!-- Scrollable Page Content -->
+            <main class="main-scrollable-area">
+                {% block content %}
+                {% endblock %}
+
+                <!-- Footer Block -->
+                <div style="text-align: center; padding: 40px 0; color: rgba(255,255,255,0.4); font-size: 12px;">
+                    <ul id="footer-links" style="list-style:none; padding:0; margin-bottom: 10px;">
+                        <li style="display:inline-block; margin: 0 10px;"><a href="#" style="color: inherit;">About
+                                Us</a></li>
+                        <li style="display:inline-block; margin: 0 10px;"><a href="/admin/"
+                                style="color: inherit;">Admin Login</a></li>
+                    </ul>
+                    <p>Copyright © 2026 Music-Hub. All Rights Reserved. Design by <a href="#" style="color: inherit;"
+                            target="_blank">Lalaland</a></p>
+                </div>
+            </main>
         </div>
     </div>
 
-    <!-- Main Content Block -->
-    {% block content %}
-    {% endblock %}
+    <!-- Global Persistent Audio Player -->
+    <div class="global-player">
+        <!-- Left Section: Track Info -->
+        <div class="progress-wrapper" id="progress-container">
+            <div class="progress-current" id="progress-bar">
+                <div class="time-display" id="player-time">00:00 / 00:00</div>
+                <div class="progress-knob"></div>
+            </div>
+        </div>
 
-    <!-- Footer Block -->
-    <div class="grid_3">
-        <div class="container">
-            <ul id="footer-links">
-                <li><a href="#">About Us</a></li>
-                <li><a href="/admin/">Admin Login</a></li>
-            </ul>
-            <p>Copyright © 2026 Music-Hub. All Rights Reserved. Design by <a href="#" target="_blank">Lalaland</a></p>
+        <div class="player-left">
+            <div class="player-cover">
+                <!-- Placeholder for currently playing track -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="rgba(255,255,255,0.3)"
+                    viewBox="0 0 16 16">
+                    <path d="M9 13c0 1.105-1.12 2-2.5 2S4 14.105 4 13s1.12-2 2.5-2 2.5.895 2.5 2z" />
+                    <path fill-rule="evenodd" d="M9 3v10H8V3h1z" />
+                    <path d="M8 2.82a1 1 0 0 1 .804-.98l3-.6A1 1 0 0 1 13 2.22V4l-5 1V2.82z" />
+                </svg>
+            </div>
+            <div class="player-info">
+                <div class="player-title">No Track Selected</div>
+                <div class="player-artist">Unknown Artist</div>
+            </div>
+            <div class="player-left-actions">
+                <!-- Like/Heart -->
+                <div class="player-like-btn" title="Like">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
+                        class="bi bi-heart" viewBox="0 0 16 16">
+                        <path
+                            d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z" />
+                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
+                        class="bi bi-heart-fill" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                            d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z" />
+                    </svg>
+                </div>
+                <!-- Comments -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h4.153l2.847 2.847a.5.5 0 0 0 .854-.353V14h4a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2zm1 3a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm0 3a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm0 3a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- Center Section: Playback Controls -->
+        <div class="player-center">
+            <!-- Loop / Shuffle Button (Defaults to Repeat All) -->
+            <button class="player-btn player-loop-btn" data-state="repeat-all" title="Repeat All">
+                <!-- Repeat All Icon -->
+                <svg class="icon-repeat-all" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="17 1 21 5 17 9"></polyline>
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                    <polyline points="7 23 3 19 7 15"></polyline>
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                </svg>
+                <!-- Repeat One Icon (Hidden Initially) -->
+                <svg class="icon-repeat-one" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="20"
+                    height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="17 1 21 5 17 9"></polyline>
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                    <polyline points="7 23 3 19 7 15"></polyline>
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                    <path d="M11 10h1v4"></path>
+                </svg>
+                <!-- Shuffle Icon (Hidden Initially) -->
+                <svg class="icon-shuffle" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="20"
+                    height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 3 21 3 21 8"></polyline>
+                    <line x1="4" y1="20" x2="21" y2="3"></line>
+                    <polyline points="21 16 21 21 16 21"></polyline>
+                    <line x1="15" y1="15" x2="21" y2="21"></line>
+                    <line x1="4" y1="4" x2="9" y2="9"></line>
+                </svg>
+            </button>
+            <!-- Prev -->
+            <button class="player-btn"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+                    fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M4 4a.5.5 0 0 1 1 0v3.248l6.267-3.636c.54-.313 1.232.066 1.232.696v7.384c0 .63-.692 1.01-1.232.696L5 8.753V12a.5.5 0 0 1-1 0V4z" />
+                </svg></button>
+            <!-- Play/Pause -->
+            <button class="player-btn player-play-btn" id="master-play-btn">
+                <!-- Play Icon -->
+                <svg class="icon-play" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor"
+                    viewBox="0 0 16 16" style="margin-left:2px;">
+                    <path
+                        d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z" />
+                </svg>
+                <!-- Pause Icon (Hidden Initially) -->
+                <svg class="icon-pause" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+                    fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z" />
+                </svg>
+            </button>
+            <!-- Next -->
+            <button class="player-btn"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+                    fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M12 4a.5.5 0 0 0-1 0v3.248L4.733 3.612C4.193 3.3 3.5 3.678 3.5 4.308v7.384c0 .63.692 1.01 1.233.696L11 8.753V12a.5.5 0 0 0 1 0V4z" />
+                </svg></button>
+            <!-- Playlist toggle -->
+            <button class="player-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                    fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M12 13c0 1.105-1.12 2-2.5 2S7 14.105 7 13s1.12-2 2.5-2 2.5.895 2.5 2z" />
+                    <path fill-rule="evenodd" d="M12 3v10h-1V3h1z" />
+                    <path d="M11 2.82a1 1 0 0 1 .804-.98l3-.6A1 1 0 0 1 16 2.22V4l-5 1V2.82z" />
+                    <path fill-rule="evenodd"
+                        d="M0 11.5a.5.5 0 0 1 .5-.5H4a.5.5 0 0 1 0 1H.5a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 .5 7H8a.5.5 0 0 1 0 1H.5a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 .5 3H8a.5.5 0 0 1 0 1H.5a.5.5 0 0 1-.5-.5z" />
+                </svg></button>
+        </div>
+
+        <!-- Right Section: Volume & Options -->
+        <div class="player-right">
+            <!-- Add to playlist -->
+            <button class="player-right-action" title="Add to Playlist">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                    <path
+                        d="M2.5 1A1.5 1.5 0 0 0 1 2.5v11A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 13.5 1h-11zM2 2.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 .5.5v11a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11z" />
+                </svg>
+            </button>
+            <!-- Lyrics -->
+            <button class="player-right-action"
+                style="font-size: 13px; font-weight: bold; border-bottom: 2px solid transparent;">LYR</button>
+            <!-- Volume -->
+            <div class="volume-container">
+                <div class="volume-popover">
+                    <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.01"
+                        value="0.8">
+                    <span class="volume-percentage" id="volume-val">80%</span>
+                </div>
+                <button class="player-right-action" title="Mute/Unmute" id="mute-btn">
+                    <svg id="vol-icon-high" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                        fill="currentColor" viewBox="0 0 16 16">
+                        <path
+                            d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z" />
+                        <path
+                            d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.483 5.483 0 0 1 11.025 8a5.483 5.483 0 0 1-1.61 3.89l.706.706z" />
+                        <path
+                            d="M8.707 11.182A4.486 4.486 0 0 0 10.025 8a4.486 4.486 0 0 0-1.318-3.182L8 5.525A3.489 3.489 0 0 1 9.025 8 3.49 3.49 0 0 1 8 10.475l.707.707zM6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06z" />
+                    </svg>
+                    <svg id="vol-icon-mute" style="display:none;" xmlns="http://www.w3.org/2000/svg" width="20"
+                        height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path
+                            d="M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06zm7.137 2.096a.5.5 0 0 1 0 .708L12.207 8l1.647 1.646a.5.5 0 0 1-.708.708L11.5 8.707l-1.646 1.647a.5.5 0 0 1-.708-.708L10.793 8 9.146 6.354a.5.1 0 1 1 .708-.708L11.5 7.293l1.646-1.647a.5.5 0 0 1 .708 0z" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Global Options Dropdown menu -->
+            <div class="player-menu-container">
+                <button class="player-right-action player-more-btn" title="More Options">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                        viewBox="0 0 16 16">
+                        <path
+                            d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" />
+                    </svg>
+                </button>
+                <!-- Glass Menu opens upwards -->
+                <div class="player-glass-menu">
+                    <a href="#" class="player-menu-item">Add to Queue</a>
+                    <a href="#" class="player-menu-item">View Artist</a>
+                    <a href="#" class="player-menu-item">View Album</a>
+                    <a href="#" class="player-menu-item">Share</a>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Audio Player Core Logic -->
+    <script>
+        let currentAudio = new Audio();
+        let isPlayerReady = false;
+
+        function updatePlayerUI(title, artist, cover) {
+            document.querySelector('.player-title').textContent = title || 'No Track Selected';
+            document.querySelector('.player-artist').textContent = artist || 'Unknown Artist';
+            const coverPlaceholder = document.querySelector('.player-cover');
+            if (cover) {
+                coverPlaceholder.innerHTML = `<img src="${cover}" alt="Cover" style="width: 100%; height: 100%; object-fit: cover;">`;
+            }
+        }
+
+        function togglePlayPauseIcons(play) {
+            const playBtn = document.getElementById('master-play-btn');
+            const disc = document.querySelector('.player-cover img');
+            if (!playBtn) return;
+            const iconPlay = playBtn.querySelector('.icon-play');
+            const iconPause = playBtn.querySelector('.icon-pause');
+
+            // Find the active card (if any)
+            const allCards = document.querySelectorAll('.glass-card');
+            allCards.forEach(c => c.classList.remove('is-playing'));
+
+            if (play) {
+                iconPlay.style.display = 'none';
+                iconPause.style.display = 'block';
+                if (disc) {
+                    disc.classList.add('rotating-disc');
+                    disc.classList.remove('paused');
+                }
+                // Highlight the card that matches the current audio source
+                allCards.forEach(card => {
+                    const songUrl = card.getAttribute('data-song-url');
+                    // Handle both absolute and relative matching
+                    if (currentAudio.src.endsWith(songUrl)) {
+                        card.classList.add('is-playing');
+                    }
+                });
+            } else {
+                iconPlay.style.display = 'block';
+                iconPause.style.display = 'none';
+                if (disc) {
+                    disc.classList.add('paused');
+                }
+            }
+        }
+
+        function loadAndPlay(url, title, artist, cover) {
+            const isSameSong = currentAudio.src.endsWith(url);
+
+            if (!isSameSong) {
+                currentAudio.src = url;
+                updatePlayerUI(title, artist, cover);
+                // Reset rotation for new song
+                const disc = document.querySelector('.player-cover img');
+                if (disc) disc.classList.remove('rotating-disc', 'paused');
+
+                currentAudio.play().then(() => {
+                    togglePlayPauseIcons(true);
+                });
+            } else {
+                // Same song: Toggle Play/Pause
+                if (currentAudio.paused) {
+                    currentAudio.play().then(() => togglePlayPauseIcons(true));
+                } else {
+                    currentAudio.pause();
+                    togglePlayPauseIcons(false);
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Volume Control Logic
+            const volumeSlider = document.getElementById('volume-slider');
+            const volumeVal = document.getElementById('volume-val');
+            const muteBtn = document.getElementById('mute-btn');
+            const volIconHigh = document.getElementById('vol-icon-high');
+            const volIconMute = document.getElementById('vol-icon-mute');
+            let lastVolume = 0.8;
+
+            function updateVolumeUI(vol) {
+                currentAudio.volume = vol;
+                if (volumeSlider) volumeSlider.value = vol;
+                if (volumeVal) volumeVal.textContent = Math.round(vol * 100) + '%';
+
+                if (vol == 0) {
+                    volIconHigh.style.display = 'none';
+                    volIconMute.style.display = 'block';
+                } else {
+                    volIconHigh.style.display = 'block';
+                    volIconMute.style.display = 'none';
+                }
+            }
+
+            if (volumeSlider) {
+                updateVolumeUI(volumeSlider.value);
+                volumeSlider.addEventListener('input', function () {
+                    updateVolumeUI(this.value);
+                    if (this.value > 0) lastVolume = this.value;
+                });
+            }
+
+            if (muteBtn) {
+                muteBtn.addEventListener('click', function () {
+                    if (currentAudio.volume > 0) {
+                        lastVolume = currentAudio.volume;
+                        updateVolumeUI(0);
+                    } else {
+                        updateVolumeUI(lastVolume || 0.8);
+                    }
+                });
+            }
+
+            // Global Play/Pause Button
+            const masterPlayBtn = document.getElementById('master-play-btn');
+            const progContainer = document.getElementById('progress-container');
+            const progBar = document.getElementById('progress-bar');
+            const timeDisplay = document.getElementById('player-time');
+
+            function formatTime(sec) {
+                if (!sec) return '00:00';
+                let m = Math.floor(sec / 60);
+                let s = Math.floor(sec % 60);
+                return (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+            }
+
+            // Progress Bar & Dragging Logic
+            let isDragging = false;
+
+            function updateProgressUI(pos) {
+                const duration = currentAudio.duration;
+                const percent = pos * 100;
+
+                // 1. Update width directly (ensure no CSS transition lag)
+                progBar.style.width = percent + '%';
+
+                if (duration && isFinite(duration)) {
+                    timeDisplay.textContent = formatTime(pos * duration) + ' / ' + formatTime(duration);
+
+                    // 2. Precise boundary checking for time capsule
+                    const wrapperWidth = progContainer.offsetWidth;
+                    // Use a fallback width if not rendered yet
+                    const capsuleWidth = timeDisplay.offsetWidth || 85;
+                    const leftPx = pos * wrapperWidth;
+
+                    const halfCapsule = capsuleWidth / 2;
+                    const padding = 10;
+
+                    let offset = 0;
+                    if (leftPx < halfCapsule + padding) {
+                        offset = (halfCapsule + padding) - leftPx;
+                    } else if (leftPx > wrapperWidth - halfCapsule - padding) {
+                        offset = (wrapperWidth - halfCapsule - padding) - leftPx;
+                    }
+
+                    // Apply offset to keep it within view
+                    timeDisplay.style.transform = `translateX(50%) translateX(${offset}px)`;
+                }
+            }
+
+            currentAudio.addEventListener('timeupdate', () => {
+                if (!isDragging && currentAudio.duration) {
+                    const pos = currentAudio.currentTime / currentAudio.duration;
+                    updateProgressUI(pos);
+                }
+            });
+
+            const handleSeek = (e) => {
+                const rect = progContainer.getBoundingClientRect();
+                let x = e.clientX - rect.left;
+                let pos = x / rect.width;
+                pos = Math.max(0, Math.min(1, pos));
+
+                // Sync UI immediately in the same event loop
+                updateProgressUI(pos);
+                return pos;
+            };
+
+            progContainer.addEventListener('mousedown', function (e) {
+                if (!currentAudio.duration || !isFinite(currentAudio.duration)) return;
+                isDragging = true;
+                progContainer.classList.add('is-dragging');
+                document.body.classList.add('is-dragging-progress');
+
+                const pos = handleSeek(e);
+                currentAudio.currentTime = pos * currentAudio.duration;
+                timeDisplay.style.display = 'block'; // Force visible during drag
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    handleSeek(e);
+                }
+            });
+
+            window.addEventListener('mouseup', (e) => {
+                if (isDragging) {
+                    isDragging = false;
+                    progContainer.classList.remove('is-dragging');
+                    document.body.classList.remove('is-dragging-progress');
+                    const pos = handleSeek(e);
+                    currentAudio.currentTime = pos * currentAudio.duration;
+                    timeDisplay.style.display = ''; // Revert to CSS hover
+                }
+            });
+
+            // Diagnostic event listeners
+            currentAudio.addEventListener('error', () => {
+                console.error("[Player] Audio Error State:", currentAudio.error);
+            });
+            currentAudio.addEventListener('stalled', () => {
+                console.warn("[Player] Playback stalled (waiting for data)");
+            });
+            if (masterPlayBtn) {
+                masterPlayBtn.addEventListener('click', function () {
+                    if (!currentAudio.src) return;
+                    if (currentAudio.paused) {
+                        currentAudio.play();
+                        togglePlayPauseIcons(true);
+                    } else {
+                        currentAudio.pause();
+                        togglePlayPauseIcons(false);
+                    }
+                });
+            }
+
+            // Card Play Buttons
+            document.addEventListener('click', function (e) {
+                const playOverlay = e.target.closest('.play-overlay');
+                if (playOverlay) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const card = playOverlay.closest('.glass-card');
+                    if (card) {
+                        const url = card.getAttribute('data-song-url');
+                        const title = card.getAttribute('data-song-title');
+                        const artist = card.getAttribute('data-song-artist');
+                        const cover = card.getAttribute('data-song-cover');
+                        loadAndPlay(url, title, artist, cover);
+                    }
+                }
+            });
+
+            // Audio Events
+            currentAudio.addEventListener('ended', () => {
+                togglePlayPauseIcons(false);
+            });
+        });
+    </script>
+
+    <!-- UI Interaction Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // More Options Dropdown
+            document.addEventListener('click', function (e) {
+                const btn = e.target.closest('.player-more-btn');
+                const menu = document.querySelector('.player-glass-menu');
+
+                if (btn) {
+                    e.preventDefault();
+                    menu.classList.toggle('show');
+                } else if (menu && !e.target.closest('.player-glass-menu')) {
+                    menu.classList.remove('show');
+                }
+            });
+
+            // Loop/Shuffle Cycle Logic (Repeat All -> Repeat One -> Shuffle -> Repeat All)
+            const loopBtn = document.querySelector('.player-loop-btn');
+            if (loopBtn) {
+                loopBtn.addEventListener('click', function () {
+                    const currentState = this.getAttribute('data-state');
+                    const iconAll = this.querySelector('.icon-repeat-all');
+                    const iconOne = this.querySelector('.icon-repeat-one');
+                    const iconShuffle = this.querySelector('.icon-shuffle');
+
+                    iconAll.style.display = 'none';
+                    iconOne.style.display = 'none';
+                    iconShuffle.style.display = 'none';
+
+                    if (currentState === 'repeat-all') {
+                        this.setAttribute('data-state', 'repeat-one');
+                        this.setAttribute('title', 'Repeat One');
+                        iconOne.style.display = 'block';
+                    } else if (currentState === 'repeat-one') {
+                        this.setAttribute('data-state', 'shuffle');
+                        this.setAttribute('title', 'Shuffle');
+                        iconShuffle.style.display = 'block';
+                    } else {
+                        // back to repeat-all
+                        this.setAttribute('data-state', 'repeat-all');
+                        this.setAttribute('title', 'Repeat All');
+                        iconAll.style.display = 'block';
+                    }
+                });
+            }
+        });
+    </script>
+
+    <!-- Discovery Card & Marquee Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Dropdown click logic for glass cards
+            document.addEventListener('click', function (e) {
+                const btn = e.target.closest('.more-btn');
+                if (btn) {
+                    e.preventDefault();
+                    const card = btn.closest('.glass-card');
+                    const menu = btn.closest('.menu-container').querySelector('.glass-menu');
+                    const isShowing = menu.classList.contains('show');
+
+                    document.querySelectorAll('.glass-menu.show').forEach(m => m.classList.remove('show'));
+                    document.querySelectorAll('.glass-card.menu-active').forEach(c => c.classList.remove('menu-active'));
+
+                    if (!isShowing) {
+                        menu.classList.add('show');
+                        card.classList.add('menu-active');
+                    }
+                } else if (!e.target.closest('.glass-menu')) {
+                    document.querySelectorAll('.glass-menu.show').forEach(m => m.classList.remove('show'));
+                    document.querySelectorAll('.glass-card.menu-active').forEach(c => c.classList.remove('menu-active'));
+                }
+            });
+
+            // Infinite Marquee Logic for Long Song Titles
+            document.querySelectorAll('.song-title-wrapper').forEach(wrapper => {
+                const marquee = wrapper.querySelector('.song-title-marquee');
+                const link = wrapper.querySelector('.song-title-link');
+                if (link && link.scrollWidth > wrapper.clientWidth) {
+                    wrapper.classList.add('is-overflowing');
+                    const clone = link.cloneNode(true);
+                    marquee.appendChild(document.createTextNode('\u00A0\u00A0\u00A0\u00A0\u00A0'));
+                    marquee.appendChild(clone);
+                }
+            });
+        });
+    </script>
+
+    <!-- Global Auth Modal -->
+    <style>
+        /* Hide the dropdown arrow in the centered modal */
+        #authModalBox #loginBox::after,
+        #authModalBox #loginForm::after {
+            display: none !important;
+        }
+
+        /* Custom tab styles for the modal */
+        .auth-tab {
+            font-size: 1.2em;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            text-decoration: none;
+            padding-bottom: 5px;
+            transition: all 0.3s;
+        }
+
+        .auth-tab.active {
+            color: #00C78A;
+            border-bottom: 2px solid #00C78A;
+        }
+    </style>
+
+    <!-- Global Auth Modal -->
+    <div id="authModalOverlay"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; justify-content: center; align-items: center;">
+
+        <div id="authModalBox"
+            style="position: relative; max-width: 500px; width: 100%; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); padding: 3em; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);">
+            <button id="closeAuthModal"
+                style="position: absolute; top: 15px; right: 25px; color: rgba(255,255,255,0.5); font-size: 2em; background: transparent; border: none; cursor: pointer; transition: all 0.3s ease; line-height: 1; z-index: 10;"
+                onmouseover="this.style.color='#ff4444';"
+                onmouseout="this.style.color='rgba(255,255,255,0.5)';">&times;</button>
+
+            <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 25px;">
+                <a href="#" class="auth-tab active" id="tabBtnLogin"
+                    style="color: #fff; text-decoration: none; font-size: 1.5em; font-weight: normal; text-transform: uppercase;">Login</a>
+                <a href="#" class="auth-tab" id="tabBtnRegister"
+                    style="color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.5em; font-weight: normal; transition: color 0.3s; text-transform: uppercase;">Register</a>
+            </div>
+
+            <!-- Login Content (Original UI) -->
+            <div id="modalLoginForm">
+                <div id="modalInnerAuthBox"
+                    style="display: block; position: static; box-shadow: none; background: transparent !important; border: none !important;">
+                    <form id="modalOverlayLoginForm" action="{% url 'music:login' %}" method="POST"
+                        style="margin: 0; width: 100%; float: none;">
+                        {% csrf_token %}
+                        <fieldset id="modalInnerAuthBody" style="padding: 0; border: none; background: transparent;">
+                            <fieldset
+                                style="width: 100%; padding: 0; margin: 0 0 1.5em 0; border: none; background: transparent;">
+                                <label for="uname"
+                                    style="color: #FFF; font-weight: normal; margin-bottom: 0.5em; font-size: 1em; display: block; line-height: 1;">Username<span
+                                        style="color: #FFF; display: inline;">*</span></label>
+                                <input type="text" name="uname" id="uname" required
+                                    style="width: 100%; box-sizing: border-box; background: #FFF !important; color: #555 !important; border: 1px solid #DFDFDF !important; padding: 0.6em; border-radius: 4px; outline: none; transition: border-color 0.3s, box-shadow 0.3s; font-size: 0.95em;"
+                                    onfocus="this.style.setProperty('border-color', '#00C78A', 'important'); this.style.setProperty('box-shadow', '0 0 10px rgba(0, 199, 138, 0.3)', 'important');"
+                                    onblur="this.style.setProperty('border-color', '#DFDFDF', 'important'); this.style.setProperty('box-shadow', 'none', 'important');">
+                            </fieldset>
+                            <fieldset
+                                style="width: 100%; padding: 0; margin: 0 0 1.5em 0; border: none; background: transparent;">
+                                <label for="password"
+                                    style="color: #FFF; font-weight: normal; margin-bottom: 0.5em; font-size: 1em; display: block; line-height: 1;">Password<span
+                                        style="color: #FFF; display: inline;">*</span></label>
+                                <input type="password" name="password" id="password" required
+                                    style="width: 100%; box-sizing: border-box; background: #FFF !important; color: #555 !important; border: 1px solid #DFDFDF !important; padding: 0.6em; border-radius: 4px; outline: none; transition: border-color 0.3s, box-shadow 0.3s; font-size: 0.95em;"
+                                    onfocus="this.style.setProperty('border-color', '#00C78A', 'important'); this.style.setProperty('box-shadow', '0 0 10px rgba(0, 199, 138, 0.3)', 'important');"
+                                    onblur="this.style.setProperty('border-color', '#DFDFDF', 'important'); this.style.setProperty('box-shadow', 'none', 'important');">
+                            </fieldset>
+                            <div style="margin-top: 2.5em; text-align: center;">
+                                <input type="submit" id="login" value="Sign in"
+                                    style="font-family: 'Open Sans', sans-serif; background: rgba(255, 255, 255, 0.05); color: #00C78A; border: 1px solid rgba(0, 199, 138, 0.4); padding: 12px 0; border-radius: 6px; font-weight: 500; font-size: 1.1em; cursor: pointer; transition: all .3s; width: 75%; display: block; margin: 0 auto; letter-spacing: 1px;"
+                                    onmouseover="this.style.background='rgba(0, 199, 138, 0.15)'; this.style.color='#00ffb3'; this.style.borderColor='#00C78A'; this.style.boxShadow='0 0 15px rgba(0, 199, 138, 0.3)';"
+                                    onmouseout="this.style.background='rgba(255, 255, 255, 0.05)'; this.style.color='#00C78A'; this.style.borderColor='rgba(0, 199, 138, 0.4)'; this.style.boxShadow='none';">
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Register Content (Original UI) -->
+            <div id="modalRegisterForm" style="display: none;">
+                <form id="modalAuthRegisterForm" action="{% url 'music:register' %}" method="POST"
+                    enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="modal-auth-register-grid" style="width: 100%; float: none;">
+                        <div
+                            style="width: 100%; margin-bottom: 1.5em; float: none; background: transparent !important; padding: 0; border: none;">
+                            <span
+                                style="color: #FFF; font-weight: normal; font-size: 1em; display: block; margin-bottom: 0.5em; line-height: 1;">Username<span
+                                    style="color:#FFF; display: inline;">*</span></span>
+                            <input type="text" name="username" id="reg_username" required
+                                style="width: 100%; box-sizing: border-box; background: #FFF !important; color: #555 !important; border: 1px solid #DFDFDF !important; padding: 0.6em; border-radius: 4px; outline: none; transition: border-color 0.3s, box-shadow 0.3s; font-size: 0.95em;"
+                                onfocus="this.style.setProperty('border-color', '#00C78A', 'important'); this.style.setProperty('box-shadow', '0 0 10px rgba(0, 199, 138, 0.3)', 'important');"
+                                onblur="this.style.setProperty('border-color', '#DFDFDF', 'important'); this.style.setProperty('box-shadow', 'none', 'important');">
+                        </div>
+
+                        <div
+                            style="width: 100%; margin-bottom: 1.5em; float: none; background: transparent !important; padding: 0; border: none;">
+                            <span
+                                style="color: #FFF; font-weight: normal; font-size: 1em; display: block; margin-bottom: 0.5em; line-height: 1;">Email
+                                Address<span style="color:#FFF; display: inline;">*</span></span>
+                            <input type="email" name="email" id="reg_email" required
+                                style="width: 100%; box-sizing: border-box; background: #FFF !important; color: #555 !important; border: 1px solid #DFDFDF !important; padding: 0.6em; border-radius: 4px; outline: none; transition: border-color 0.3s, box-shadow 0.3s; font-size: 0.95em;"
+                                onfocus="this.style.setProperty('border-color', '#00C78A', 'important'); this.style.setProperty('box-shadow', '0 0 10px rgba(0, 199, 138, 0.3)', 'important');"
+                                onblur="this.style.setProperty('border-color', '#DFDFDF', 'important'); this.style.setProperty('box-shadow', 'none', 'important');">
+                        </div>
+
+                        <div
+                            style="width: 100%; margin-bottom: 1.5em; float: none; background: transparent !important; padding: 0; border: none;">
+                            <span
+                                style="color: #FFF; font-weight: normal; font-size: 1em; display: block; margin-bottom: 0.5em; line-height: 1;">Password<span
+                                    style="color:#FFF; display: inline;">*</span></span>
+                            <input type="password" name="password" id="reg_password" required
+                                style="width: 100%; box-sizing: border-box; background: #FFF !important; color: #555 !important; border: 1px solid #DFDFDF !important; padding: 0.6em; border-radius: 4px; outline: none; transition: border-color 0.3s, box-shadow 0.3s; font-size: 0.95em;"
+                                onfocus="this.style.setProperty('border-color', '#00C78A', 'important'); this.style.setProperty('box-shadow', '0 0 10px rgba(0, 199, 138, 0.3)', 'important');"
+                                onblur="this.style.setProperty('border-color', '#DFDFDF', 'important'); this.style.setProperty('box-shadow', 'none', 'important');">
+                        </div>
+
+                        <div
+                            style="width: 100%; margin-bottom: 1.5em; float: none; background: transparent !important; padding: 0; border: none;">
+                            <span
+                                style="color: #FFF; font-weight: normal; font-size: 1em; display: block; margin-bottom: 0.5em; line-height: 1;">Confirm
+                                Password<span style="color:#FFF; display: inline;">*</span></span>
+                            <input type="password" name="confirm_password" id="reg_confirm_password" required
+                                style="width: 100%; box-sizing: border-box; background: #FFF !important; color: #555 !important; border: 1px solid #DFDFDF !important; padding: 0.6em; border-radius: 4px; outline: none; transition: border-color 0.3s, box-shadow 0.3s; font-size: 0.95em;"
+                                onfocus="this.style.setProperty('border-color', '#00C78A', 'important'); this.style.setProperty('box-shadow', '0 0 10px rgba(0, 199, 138, 0.3)', 'important');"
+                                onblur="this.style.setProperty('border-color', '#DFDFDF', 'important'); this.style.setProperty('box-shadow', 'none', 'important');">
+                        </div>
+
+                        <div class="register-but"
+                            style="margin-top: 2.5em; text-align: center; float: none; width: 100%;">
+                            <input type="submit" value="Register"
+                                style="font-family: 'Open Sans', sans-serif; background: rgba(255, 255, 255, 0.05); color: #00C78A; border: 1px solid rgba(0, 199, 138, 0.4); padding: 12px 0; border-radius: 6px; font-weight: 500; font-size: 1.1em; cursor: pointer; transition: all .3s; width: 75%; display: block; margin: 0 auto; letter-spacing: 1px;"
+                                onmouseover="this.style.background='rgba(0, 199, 138, 0.15)'; this.style.color='#00ffb3'; this.style.borderColor='#00C78A'; this.style.boxShadow='0 0 15px rgba(0, 199, 138, 0.3)';"
+                                onmouseout="this.style.background='rgba(255, 255, 255, 0.05)'; this.style.color='#00C78A'; this.style.borderColor='rgba(0, 199, 138, 0.4)'; this.style.boxShadow='none';">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const overlay = document.getElementById('authModalOverlay');
+            const btnOpenLogin = document.getElementById('openLoginModal');
+            const btnOpenReg = document.getElementById('openRegisterModal'); // if any
+            const btnClose = document.getElementById('closeAuthModal');
+
+            const tabLogin = document.getElementById('tabBtnLogin');
+            const tabReg = document.getElementById('tabBtnRegister');
+            const formLogin = document.getElementById('modalLoginForm');
+            const formReg = document.getElementById('modalRegisterForm');
+
+            function openModal(mode) {
+                if (!overlay) return;
+                overlay.style.display = 'flex';
+                if (mode === 'register') {
+                    showRegister();
+                } else {
+                    showLogin();
+                }
+            }
+
+            function closeModal() {
+                if (overlay) overlay.style.display = 'none';
+            }
+
+            function showLogin(e) {
+                if (e) e.preventDefault();
+                tabLogin.classList.add('active');
+                tabLogin.style.color = '#00C78A';
+                tabReg.classList.remove('active');
+                tabReg.style.color = 'rgba(255,255,255,0.6)';
+                formLogin.style.display = 'block';
+                formReg.style.display = 'none';
+            }
+
+            function showRegister(e) {
+                if (e) e.preventDefault();
+                tabReg.classList.add('active');
+                tabReg.style.color = '#00C78A';
+                tabLogin.classList.remove('active');
+                tabLogin.style.color = 'rgba(255,255,255,0.6)';
+                formReg.style.display = 'block';
+                formLogin.style.display = 'none';
+            }
+
+            if (btnOpenLogin) btnOpenLogin.addEventListener('click', (e) => { e.preventDefault(); openModal('login'); });
+            if (btnOpenReg) btnOpenReg.addEventListener('click', (e) => { e.preventDefault(); openModal('register'); });
+            if (btnClose) btnClose.addEventListener('click', closeModal);
+
+            if (tabLogin) tabLogin.addEventListener('click', showLogin);
+            if (tabReg) tabReg.addEventListener('click', showRegister);
+
+            if (overlay) {
+                overlay.addEventListener('mousedown', (e) => {
+                    if (e.target === overlay) closeModal();
+                });
+            }
+        });
+    </script>
     {% block extra_body %}{% endblock %}
 </body>
 
