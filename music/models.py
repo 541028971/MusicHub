@@ -4,6 +4,17 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 import os
 import re
+from mutagen.mp3 import MP3
+
+def get_audio_duration(file_path):
+    try:
+        audio = MP3(file_path)
+        length = int(audio.info.length)
+        minutes = length // 60
+        seconds = length % 60
+        return f"{minutes:02d}:{seconds:02d}"
+    except Exception as e:
+        return "00:00"
 
 def song_cover_path(instance, filename):
     ext = filename.split('.')[-1]
@@ -81,6 +92,7 @@ class Playlist(models.Model):
     cover = models.CharField(max_length=100) # pcover -> cover
     is_private = models.BooleanField(default=False) # private -> is_private
     views = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
     
     # Replaces playlist_songs table
     songs = models.ManyToManyField(Song, related_name='included_in_playlists', blank=True)

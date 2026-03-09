@@ -23,10 +23,10 @@ $(document).ready(function () {
 // Login Form
 // Login Form Dropdown
 $(function () {
-    var button = $('#loginContainer #loginButton');
+    var button = $('#loginContainer #userAvatarButton');
     var box = $('#loginContainer #loginBox');
     var form = $('#loginContainer #loginForm');
-    
+
     if (button.length > 0 && box.length > 0) {
         button.removeAttr('href');
         button.mouseup(function (login) {
@@ -37,7 +37,7 @@ $(function () {
             return false;
         });
         $(document).mouseup(function (login) {
-            if ($(login.target).closest('#loginButton').length === 0) {
+            if ($(login.target).closest('#userAvatarButton').length === 0) {
                 button.removeClass('active');
                 box.hide();
             }

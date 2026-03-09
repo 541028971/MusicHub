@@ -15,9 +15,9 @@
 
         <!-- X Close Button to Home -->
         <a href="{% url 'music:index' %}"
-            style="position: absolute; top: 15px; right: 25px; color: rgba(255,255,255,0.5); font-size: 2em; text-decoration: none; transition: all 0.3s ease; line-height: 1;"
+            style="position: absolute; top: 15px; right: 25px; color: rgba(255, 255, 255, 0.85); font-size: 2em; text-decoration: none; transition: all 0.3s ease; line-height: 1;"
             onmouseover="this.style.color='#ff4444'; this.style.textShadow='0 0 15px rgba(255,68,68,0.8)';"
-            onmouseout="this.style.color='rgba(255,255,255,0.5)'; this.style.textShadow='none';">&times;</a>
+            onmouseout="this.style.color='rgba(255, 255, 255, 0.85)'; this.style.textShadow='none';">&times;</a>
 
         <form id="registration-form" action="{% url 'music:register' %}" method="POST" enctype="multipart/form-data">
             {% csrf_token %}

@@ -1,32 +1,63 @@
-# MusicHub Update Log
+# MusicHub 更新日志
 
-## Version v0.1.0-Alpha "The Smooth Interaction Update"
-**Date:** March 8, 2026
+## 版本 v0.1.0
+**日期：** 2026年3月8日
 
-### 🎨 Visual & UI Enhancements
-- **Neon Logo Restoration**: Restored the original "MusicHub" logo with a pure white core and multi-layered green neon bloom. Added a "breathing" pulse animation to bring the interface to life.
-- **Featured Menu Icon**: Added a stylish 'Sparkles' icon to the Featured navigation. 
-    - **Color**: Custom Golden (#FFD700)
-    - **Size**: Enlarged to 18x18 for better prominence.
-    - **Perfect Alignment**: Refactored navigation links to use **Flexbox (`align-items: center`)**, ensuring icons and text are mathematically centered regardless of font size.
-- **Glassmorphic Components**: Polished sidebar pills and player elements with frosted glass effects and refined shadow depths.
-- **Theme Consistency**: Locked the primary accent color to the designated "MusicHub Green" (#00C78A).
+### 🎨 视觉与 UI 增强
+- **霓虹 Logo 修复**：恢复了原始的 "MusicHub" Logo，采用纯白核心和多层绿色霓虹光晕。添加了“呼吸”脉冲动画，让界面更生动。
+- **推荐菜单图标**：在“精选”导航栏添加了时尚的 'Sparkles' 图标。
+    - **颜色**：自定义金色 (#FFD700)
+    - **尺寸**：放大至 18x18 以更加突出。
+    - **完美对齐**：重构导航链接，使用 **Flexbox (`align-items: center`)**，确保图标和文字在视觉上完美居中。
+- **玻璃拟态组件**：优化了侧边栏按钮和播放器元素，增加了毛玻璃效果和更精细的阴影深度。
+- **主题一致性**：将主要强调色锁定为指定的 "MusicHub Green" (#00C78A)。
 
-### 🎵 Audio Player Performance
-- **Interactive Progres Bar**:
-    - **Sticky Dragging**: Implemented zero-delay seeking. CSS transitions are dynamically disabled during manual dragging for a "sticky" feel.
-    - **Streaming Logic**: Implemented a custom Django media server with **HTTP Range Request** support (Partial Content). Resolved the bug where clicking the progress bar would reset playback to 0.
-- **Floating Time Display**:
-    - Introduced a real-time time capsule that follows the progress knob.
-    - **Boundary Protection**: Implemented edge-clamping logic to ensure the time display never overflows the screen bounds at 0% or 100%.
-- **Seamless UX**:
-    - Disabled global text selection during progress dragging to prevent accidental highlights.
-    - Locked cursor to "grabbing" state during seek operations.
+### 🎵 播放器性能优化
+- **交互式进度条**：
+    - **即时拖动**：实现了零延迟播放跳转。在手动拖动期间动态禁用 CSS 过渡，以获得极佳的跟随感。
+    - **流媒体逻辑**：实现了一个自定义的 Django 媒体服务器，支持 **HTTP Range 请求** (Partial Content)，支持音频分段加载。解决了点击进度条会导致播放重置为 0 的问题。
+- **悬浮时间显示**：
+    - 引入了随进度条滑块移动的实时时间显示。
+    - **边缘保护**：实现了边缘限制逻辑，确保时间显示在进度条两端不会超出屏幕边界。
+- **体验细节**：
+    - 拖动进度条时禁用全局文本选择，防止意外高亮文本。
+    - 拖动时光标锁定为“抓取”状态。
 
-### 🛠️ Backend & Infrastructure
-- **Media Router**: Refactored URL patterns to handle large audio files via `serve_media` for specialized buffering.
-- **File System Protection**: Integrated basic path normalization and security checks for served media assets.
-- **Codebase Cleanup**: Removed a series of temporary debugging and data-population scripts to maintain a clean production-ready environment.
+### 🛠️ 后端与基础设施
+- **媒体路由**：重构了 URL 模式，通过 `serve_media` 专门处理大音频文件的缓冲。
+- **路径安全**：增强了媒体资源的路径规范化和访问安全。
+- **代码库清理**：移除了一系列临时调试脚本，保持生产环境整洁。
 
 ---
-*Next Targets: Volume bar interaction, batch operations, and playlist management.*
+
+## 版本 v0.2.0
+**日期：** 2026年3月9日
+
+### ❤️ 全站红心“点亮”系统与乐库增强
+- **全域同步交互**：实现了核心红心收藏功能的完整逻辑。在首页、乐库、搜索结果、歌单详情或播放器中点击红心，全站所有位置的同一歌曲状态将瞬间同步。
+- **乐库与搜索系统升级**：
+    - **新列添加**：为 Library 和 Search 的歌曲列表新增了专用的 "Like" 列，对齐了 6 列网格布局，确保一致性。
+    - **后端深度集成**：进入页面时后端会自动查询并匹配当前用户的收藏记录，实现加载即点亮。
+- **视觉反馈优化**：
+    - **普通/悬停**：未点亮时仅为轮廓线，悬停时轮廓变红并伴随缩放动画。
+    - **点亮状态**：成功点亮后显示实心红心，并伴随全站动态通知提醒。
+
+### 📂 全新歌单管理系统
+- **添加到歌单弹窗**：在播放器右侧及歌曲卡片菜单中新增了“添加到歌单”入口。
+- **交互设计**：实现了一个居中的玻璃拟态弹出窗口，支持查看“我喜欢的音乐”及用户创建的所有歌单。
+- **后端接口**：新增了 JSON API 用于异步获取歌单列表和管理歌曲添加逻辑。
+- **动态更新**：歌单列表按 ID 排序，支持实时刷新侧边栏计数。
+
+### 🎨 导航与 UI 精简
+- **导航标签架构优化**：
+    - **极简主义**：移除了冗余的 "VIP" 标签，暂时隐藏了未开放的 "Top Charts" 和 "Artists"。
+    - **视觉聚焦**：非活动状态的导航标签（如 Featured, Playlist Square 等）透明度调至 0.45，通过明暗对比突出当前页面。
+- **组件细节打磨**：
+    - **艺术家页面**：缩小了头像尺寸，并为背景增加了高不透明度的“毛玻璃”（Frosted Glass）纹理，提升了高级感。
+    - **对比度校准**：提升了播放列表中专辑名称和序列号的亮度，使其与歌曲名称保持视觉平衡。
+
+### 🛠️ 性能与代码修复
+- **CSS 冲突消除**：彻底清理了 `discovery.css` 中与全局红心样式冲突的旧代码，解决了悬停 Bug。
+- **脚本健壮性**：重写了全局同步选择器和侧边栏折叠逻辑，使用了更具兼容性的变量声明，解决了 Linter 警告。
+
+---

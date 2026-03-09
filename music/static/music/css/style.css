@@ -113,7 +113,8 @@ body a {
 }
 
 /* Login Button */
-#loginButton {
+#loginButton,
+#userAvatarButton {
     display: inline-block;
     position: relative;
     z-index: 30;

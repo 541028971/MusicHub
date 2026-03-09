@@ -112,6 +112,8 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    line-height: 1;
+    /* Reset line-height to prevent vertical shifting */
 }
 
 .sidebar-pill.flex-align svg {
@@ -548,20 +550,14 @@ body.is-dragging-progress {
 
 .like-btn:hover {
     color: #ff4444;
-    transform: scale(1.2);
+    transform: scale(1.1);
 }
 
-.like-btn .bi-heart-fill {
-    display: none;
-}
+/* Heart visibility logic - HANDLED GLOBALLY IN BASE.HTML */
 
-.like-btn:hover .bi-heart {
-    display: none;
-}
 
-.like-btn:hover .bi-heart-fill {
-    display: inline-block;
-}
+/* Hover effects for unliked songs - REMOVED to prioritize global heart styling */
+
 
 .download-btn:hover {
     color: #00C78A;
