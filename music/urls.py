@@ -20,7 +20,9 @@ urlpatterns = [
     path('api/playlist-details/<str:playlist_id>/', views.get_playlist_details, name='get_playlist_details'),
     path('api/record-recent-play/', views.record_recent_play, name='record_recent_play'),
     path('api/toggle-favorite/', views.toggle_favorite, name='toggle_favorite'),
+    path('api/check-favorite/', views.check_favorite, name='check_favorite'),
     path('api/remove-from-playlist/', views.remove_from_playlist, name='remove_from_playlist'),
+    path('api/update-last-played/', views.update_last_played, name='update_last_played'),
     path('search/', views.music_library_view, name='search'),
 ]
 

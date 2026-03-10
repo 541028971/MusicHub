@@ -45,6 +45,7 @@ class User(models.Model):
     phone_number = models.CharField(max_length=11, null=True, blank=True)
     city = models.CharField(max_length=100, null=True, blank=True)
     membership = models.IntegerField(default=0)
+    last_played_song = models.ForeignKey('Song', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return self.username

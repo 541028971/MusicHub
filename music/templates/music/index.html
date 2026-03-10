@@ -31,45 +31,43 @@
     <div class="glass-card" data-song-id="{{ song.id }}" data-song-url="{{ song.download_link.url }}"
         data-song-title="{{ song.name }}" data-song-artist="{{ song.arrangement }}"
         data-song-cover="{% if song.cover and song.cover.name and song.cover.name != 'images/Cover' %}{{ song.cover.url }}{% else %}/static/music/images/grid%20(1).jpg{% endif %}">
-        <a href="{% url 'music:song_detail' song.pk %}" class="card-link" style="display:block;">
-            <div class="card-img-wrapper">
-                <img src="{% if song.cover and song.cover.name and song.cover.name != 'images/Cover' %}{{ song.cover.url }}{% else %}/static/music/images/grid%20(1).jpg{% endif %}"
-                    alt="{{ song.name }}" loading="lazy"
-                    onerror="this.onerror=null; this.src='/static/music/images/grid%20(1).jpg';" />
-                <div class="play-overlay" style="cursor: pointer;">
-                    <svg class="play-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
-                        viewBox="0 0 16 16">
-                        <path
-                            d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z" />
-                    </svg>
-                    <svg class="pause-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32"
-                        fill="currentColor" viewBox="0 0 16 16">
-                        <path
-                            d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z" />
-                    </svg>
-                </div>
+        <div class="card-img-wrapper">
+            <img src="{% if song.cover and song.cover.name and song.cover.name != 'images/Cover' %}{{ song.cover.url }}{% else %}/static/music/images/grid%20(1).jpg{% endif %}"
+                alt="{{ song.name }}" loading="lazy"
+                onerror="this.onerror=null; this.src='/static/music/images/grid%20(1).jpg';" />
+            <div class="play-overlay" style="cursor: pointer;" 
+                 onclick="loadAndPlay('{{ song.download_link.url }}', '{{ song.name|escapejs }}', '{{ song.arrangement|escapejs }}', '{% if song.cover %}{{ song.cover.url }}{% else %}/static/music/images/grid%20(1).jpg{% endif %}', '{{ song.id }}')">
+                <svg class="play-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
+                    viewBox="0 0 16 16">
+                    <path
+                        d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z" />
+                </svg>
+                <svg class="pause-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                    fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z" />
+                </svg>
             </div>
-        </a>
+        </div>
         <div class="card-info">
             <div class="card-text">
                 <h5>
                     <div class="song-title-wrapper">
-                        <div class="song-title-marquee"><a href="{% url 'music:song_detail' song.pk %}"
-                                class="song-title-link">{{ song.name }}</a></div>
+                        <div class="song-title-marquee"><span class="song-title-link">{{ song.name }}</span></div>
                     </div>
                 </h5>
                 <p>{{ song.album|default:"Unknown Artist/Album" }}</p>
             </div>
             <div class="card-actions">
                 {% if request.user.is_authenticated %}
-                <button onclick="downloadSong('{{ song.download_link.url }}', '{{ song.name }}')"
+                <button onclick="downloadSong('{{ song.download_link.url }}', '{{ song.name|escapejs }}')"
                     class="card-action-btn download-btn" title="Download">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                         class="bi bi-download" viewBox="0 0 16 16">
                         <path
                             d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
                         <path
-                            d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
+                            d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.1 0 1 0-.708.708l3 3z" />
                     </svg>
                 </button>
                 {% endif %}
@@ -98,7 +96,7 @@
                     </button>
                     <div class="glass-menu">
                         <a href="{% url 'music:song_detail' song.pk %}" class="glass-menu-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
                                 viewBox="0 0 16 16" style="margin-right: 12px; opacity: 1;">
                                 <path
                                     d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z" />
@@ -106,12 +104,8 @@
                         </a>
                         <a href="javascript:void(0)" class="glass-menu-item add-to-playlist-item"
                             data-song-id="{{ song.id }}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
-                                viewBox="0 0 16 16" style="margin-right: 12px; opacity: 1;">
-                                <path
-                                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
-                                <path
-                                    d="M2.5 1A1.5 1.5 0 0 0 1 2.5v11A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 13.5 1h-11z" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 12px;">
+                                <path d="M11 12H3"></path><path d="M16 6H3"></path><path d="M16 18H3"></path><path d="M18 9v6"></path><path d="M21 12h-6"></path>
                             </svg> Add to Playlist
                         </a>
                         <div class="glass-menu-divider"></div>
@@ -123,14 +117,6 @@
                                     d="M12 13c0 1.105-1.12 2-2.5 2S7 14.105 7 13s1.12-2 2.5-2 2.5.895 2.5 2z" />
                                 <path fill-rule="evenodd" d="M12 3v10h-1V3h1z" />
                             </svg> Add to Queue
-                        </a>
-                        <a href="#" class="glass-menu-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
-                                viewBox="0 0 16 16" style="margin-right: 12px; opacity: 0.8;">
-                                <path
-                                    d="M13.5 1h-11A1.5 1.5 0 0 0 1 2.5v11A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 13.5 1z" />
-                                <path d="M8 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
-                            </svg> Share
                         </a>
                     </div>
                 </div>
@@ -151,25 +137,25 @@
 <div class="row">
     <div class="col-md-3 col-sm-6">
         <a href="{% url 'music:library' %}?q=Pop" class="genre-card"
-            style="background-image: url(&quot;{% static 'music/images/grid (1).jpg' %}&quot;);">
+            style="background-image: url('/static/music/images/grid%20(1).jpg');">
             <span>Pop</span>
         </a>
     </div>
     <div class="col-md-3 col-sm-6">
         <a href="{% url 'music:library' %}?q=Rock" class="genre-card"
-            style="background-image: url(&quot;{% static 'music/images/grid (6).jpg' %}&quot;);">
+            style="background-image: url('/static/music/images/grid%20(6).jpg');">
             <span>Rock</span>
         </a>
     </div>
     <div class="col-md-3 col-sm-6">
         <a href="{% url 'music:library' %}?q=Electronic" class="genre-card"
-            style="background-image: url(&quot;{% static 'music/images/grid (16).jpg' %}&quot;);">
+            style="background-image: url('/static/music/images/grid%20(16).jpg');">
             <span>Electronic</span>
         </a>
     </div>
     <div class="col-md-3 col-sm-6">
         <a href="{% url 'music:library' %}?q=Folk" class="genre-card"
-            style="background-image: url(&quot;{% static 'music/images/grid (11).jpg' %}&quot;);">
+            style="background-image: url('/static/music/images/grid%20(11).jpg');">
             <span>Folk</span>
         </a>
     </div>

@@ -38,9 +38,20 @@ def index(request):
             })
         return results
 
+    # Get last played song for recovery
+    last_played = None
+    if request.user.is_authenticated:
+        try:
+            custom_user = CustomUser.objects.get(username=request.user.username)
+            if custom_user.last_played_song:
+                last_played = custom_user.last_played_song
+        except CustomUser.DoesNotExist:
+            pass
+
     context = {
         'top_trending': process_songs(trending_songs),
         'recently_added': process_songs(new_songs),
+        'last_played_song': last_played,
     }
     return render(request, 'music/index.html', context)
 
@@ -604,6 +615,41 @@ def remove_from_playlist(request):
         return JsonResponse({'success': True})
     except (Song.DoesNotExist, Playlist.DoesNotExist, CustomUser.DoesNotExist):
         return JsonResponse({'success': False, 'error': 'Not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+def check_favorite(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'is_liked': False})
+    
+    song_id = request.GET.get('song_id')
+    if not song_id:
+        return JsonResponse({'error': 'No song_id provided'}, status=400)
+        
+    try:
+        custom_user = CustomUser.objects.get(username=request.user.username)
+        is_liked = custom_user.favorite_songs.filter(id=song_id).exists()
+        return JsonResponse({'success': True, 'is_liked': is_liked})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+def update_last_played(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Not authenticated'}, status=401)
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Only POST allowed'}, status=405)
+
+    song_id = request.POST.get('song_id')
+    if not song_id:
+        return JsonResponse({'success': False, 'error': 'No song_id provided'}, status=400)
+    
+    try:
+        custom_user = CustomUser.objects.get(username=request.user.username)
+        song = Song.objects.get(id=song_id)
+        custom_user.last_played_song = song
+        custom_user.save()
+        return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 

@@ -223,26 +223,31 @@
 
     {% for song in page_obj %}
     <div class="song-row" data-song-id="{{ song.id }}"
-        style="display: grid !important; grid-template-columns: 50px 1.5fr 150px 150px 1fr 60px !important; column-gap: 20px; align-items: center; padding: 12px 20px; border-radius: 12px; transition: all 0.2s; cursor: pointer; color: rgba(255, 255, 255, 0.8); font-size: 14px; margin-bottom: 5px;"
-        onclick="loadAndPlay('{{ song.download_link.url }}', '{{ song.name }}', '{{ song.arrangement }}', '{{ song.cover.url }}', '{{ song.id }}', false)">
-        <div style="color: rgba(255,255,255,0.95);">{{ forloop.counter|add:page_obj.start_index|add:-1 }}</div>
+        style="display: grid !important; grid-template-columns: 50px 1.5fr 150px 150px 1fr 60px !important; column-gap: 20px; align-items: center; padding: 12px 20px; border-radius: 12px; transition: all 0.2s; cursor: default; color: rgba(255, 255, 255, 0.8); font-size: 14px; margin-bottom: 5px;">
+        <div class="song-index-col" style="color: rgba(255,255,255,0.95); position: relative; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+            <span class="index-num">{{ forloop.counter|add:page_obj.start_index|add:-1 }}</span>
+            <div class="index-play-btn" onclick="loadAndPlay('{{ song.download_link.url }}', '{{ song.name }}', '{{ song.arrangement }}', '{{ song.cover.url }}', '{{ song.id }}', false)">
+                <svg class="icon-play" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+                </svg>
+                <svg class="icon-pause" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16" style="display: none;">
+                    <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/>
+                </svg>
+            </div>
+        </div>
         <div class="song-cell-title"
-            style="display: flex; align-items: center; gap: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-            <img src="{{ song.cover.url }}" class="song-cell-img"
-                style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;"
-                onerror="this.src='/static/music/images/grid%20(1).jpg'">
+             style="display: flex; align-items: center; gap: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            <div style="position: relative; cursor: pointer; display: flex; align-items: center;" onclick="loadAndPlay('{{ song.download_link.url }}', '{{ song.name }}', '{{ song.arrangement }}', '{{ song.cover.url }}', '{{ song.id }}', false)">
+                <img src="{{ song.cover.url }}" class="song-cell-img"
+                    style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;"
+                    onerror="this.src='/static/music/images/grid%20(1).jpg'">
+            </div>
             <span>{{ song.name }}</span>
         </div>
 
         <!-- Actions -->
         <div>
-            <style>
-                .song-row:hover .row-action-pill {
-                    visibility: visible !important;
-                }
-            </style>
-            <div class="row-action-pill" onclick="event.stopPropagation()"
-                style="visibility: hidden; display: flex; align-items: center; justify-content: space-around; background: rgba(255, 255, 255, 0.12); padding: 6px 10px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.15); width: 140px; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
+            <div class="row-action-pill" onclick="event.stopPropagation()">
                 <div class="row-action-btn" title="Download" onclick="downloadSong('{{ song.download_link.url }}', '{{ song.name }}')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
