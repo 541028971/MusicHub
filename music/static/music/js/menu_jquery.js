@@ -21,22 +21,26 @@ $(document).ready(function () {
 
 
 // Login Form
+// Login Form Dropdown
 $(function () {
-    var button = $('#loginButton');
-    var box = $('#loginBox');
-    var form = $('#loginForm');
-    button.removeAttr('href');
-    button.mouseup(function (login) {
-        box.toggle();
-        button.toggleClass('active');
-    });
-    form.mouseup(function () {
-        return false;
-    });
-    $(this).mouseup(function (login) {
-        if (!($(login.target).parent('#loginButton').length > 0)) {
-            button.removeClass('active');
-            box.hide();
-        }
-    });
+    var button = $('#loginContainer #userAvatarButton');
+    var box = $('#loginContainer #loginBox');
+    var form = $('#loginContainer #loginForm');
+
+    if (button.length > 0 && box.length > 0) {
+        button.removeAttr('href');
+        button.mouseup(function (login) {
+            box.toggle();
+            button.toggleClass('active');
+        });
+        form.mouseup(function () {
+            return false;
+        });
+        $(document).mouseup(function (login) {
+            if ($(login.target).closest('#userAvatarButton').length === 0) {
+                button.removeClass('active');
+                box.hide();
+            }
+        });
+    }
 });

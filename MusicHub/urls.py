@@ -21,10 +21,16 @@ from django.conf import settings
 from django.conf.urls.static import static
 from music.admin import admin_site
 
+from music.views import serve_media
+from django.urls import re_path
+
 urlpatterns = [
     path("admin/", admin_site.urls),
     path("", include("music.urls")),
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Use our custom serve_media view to support Range requests (fixing seeking issues)
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve_media),
+    ]
