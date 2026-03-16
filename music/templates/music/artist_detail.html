@@ -1,0 +1,223 @@
+{% extends 'music/base.html' %}
+{% load static %}
+
+{% block title %}Artist - {{ artist.name }}{% endblock %}
+
+{% block content %}
+<div class="playlist-detail-container page-entrance">
+    
+    <div class="playlist-detail-header">
+        <div class="playlist-detail-cover" style="display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #00C78A 0%, #005f43 100%); color: #fff; font-size: 3.5rem; font-weight: 800; text-transform: uppercase; user-select: none;">
+            {{ artist.name|slice:":1" }}
+        </div>
+        <div class="playlist-detail-info">
+            <h1 class="playlist-detail-title">{{ artist.name }}</h1>
+            <div class="playlist-detail-meta">
+                <span>{{ artist.song_count }} {{ artist.song_count|pluralize:"Song,Songs" }}</span>
+                <span style="opacity: 0.5">•</span>
+                <span>{{ artist.album_count }} {{ artist.album_count|pluralize:"Album,Albums" }}</span>
+            </div>
+            <div class="playlist-detail-actions">
+                <button class="action-btn btn-play-all {% if not artist.songs %}disabled{% endif %}" onclick="playPlaylistSongs([
+                    {% for s in artist.songs %}
+                    {
+                        url: '{{ s.file_url|escapejs }}',
+                        title: '{{ s.title|escapejs }}',
+                        artist: '{{ artist.name|escapejs }}',
+                        cover: '{{ s.cover|escapejs }}',
+                        id: '{{ s.id }}',
+                        album: '{{ s.album|escapejs }}',
+                        isLiked: {% if s.is_liked %}true{% else %}false{% endif %}
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ])">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802 0 0 1 0 1.393z"/>
+                    </svg>
+                    Play All
+                </button>
+                <button class="action-btn btn-glass {% if not artist.songs %}disabled{% endif %}" onclick="showHubToast('Downloading artist collection...')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.1 0 1 0-.708.708l3 3z"/>
+                    </svg>
+                    Download
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Artist Tabs -->
+    <div class="artist-tabs" style="display: flex; gap: 30px; margin: 30px 5px 5px 5px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+        <a href="?tab=songs" class="artist-tab-item {% if active_tab == 'songs' %}active{% endif %}" style="color: rgba(255, 255, 255, 0.5); font-size: 1.1rem; font-weight: 600; text-decoration: none; padding-bottom: 12px; position: relative; transition: all 0.3s;">Songs</a>
+        <a href="?tab=albums" class="artist-tab-item {% if active_tab == 'albums' %}active{% endif %}" style="color: rgba(255, 255, 255, 0.5); font-size: 1.1rem; font-weight: 600; text-decoration: none; padding-bottom: 12px; position: relative; transition: all 0.3s;">Albums</a>
+    </div>
+{% block extra_head %}
+<style>
+    /* Reduce gap between tabs and song table */
+    .song-table-container {
+        margin-top: 15px !important;
+    }
+
+    .artist-tab-item:hover { color: #fff !important; }
+    .artist-tab-item.active { color: #fff !important; }
+    .artist-tab-item.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: var(--aurora-green);
+        border-radius: 2px;
+        box-shadow: 0 0 15px var(--aurora-shadow);
+    }
+
+    /* Grid for albums */
+    .catalog-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 25px;
+    }
+
+    .catalog-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .catalog-card:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-5px);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .catalog-card img {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .catalog-card h5 {
+        margin: 0 0 5px 0;
+        font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #fff;
+    }
+
+    .catalog-card p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+</style>
+{% endblock %}
+
+    {% if active_tab == 'songs' %}
+    <!-- Song List View -->
+    <div class="song-table-container">
+        <div class="song-row header" style="border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
+            <div>#</div>
+            <div>Title</div>
+            <div></div>
+            <div>Album</div>
+            <div style="text-align: center;">Likes</div>
+        </div>
+
+        {% for s in artist.songs %}
+        <div class="song-row" data-song-id="{{ s.id }}" style="cursor: default;">
+            <div class="song-index-col" style="color: rgba(255,255,255,0.9); position: relative; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; padding-left: 5px;">
+                <span class="index-num">{{ forloop.counter|stringformat:"02d" }}</span>
+                <div class="index-play-btn" onclick="loadAndPlay('{{ s.file_url|escapejs }}', '{{ s.title|escapejs }}', '{{ s.artist|escapejs }}', '{{ s.cover|escapejs }}', {{ s.id }})">
+                    <svg class="icon-play" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+                    </svg>
+                    <svg class="icon-pause" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16" style="display: none;">
+                        <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="song-cell-title">
+                <div style="position: relative; cursor: pointer; flex-shrink: 0; display: flex; align-items: center;" onclick="loadAndPlay('{{ s.file_url|escapejs }}', '{{ s.title|escapejs }}', '{{ s.artist|escapejs }}', '{{ s.cover|escapejs }}', {{ s.id }})">
+                    <img src="{{ s.cover }}" class="song-cell-img" alt="{{ s.title }}" onerror="this.onerror=null; this.src='/media/covers/default_cover.jpg'">
+                </div>
+                <div class="song-title-wrapper" style="width: 100%; min-width: 0; overflow: hidden;">
+                    <div class="song-title-marquee">
+                        <span class="song-title-text song-title-link">{{ s.title }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="row-action-pill">
+                <div class="row-action-btn" onclick="event.stopPropagation(); downloadSong('{{ s.file_url|escapejs }}', '{{ s.title|escapejs }}')" title="Download">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </div>
+                <div class="row-action-btn" onclick="event.stopPropagation(); window.triggerAddToPlaylist({{ s.id }})" title="Add to Playlist">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 12H3"></path><path d="M16 6H3"></path><path d="M16 18H3"></path><path d="M18 9v6"></path><path d="M21 12h-6"></path>
+                    </svg>
+                </div>
+                <div class="row-action-btn" onclick="event.stopPropagation(); showHubToast('Comments coming soon!')" title="Comment">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="hover-marquee-wrapper {% if not s.album or 'unknown' in s.album|lower %}metadata-unknown{% endif %}">
+                <div class="hover-marquee-content">
+                    {% if not s.album or 'unknown' in s.album|lower %}
+                        <span>{{ s.album|default:"Unknown Album" }}</span>
+                    {% else %}
+                        <a href="{% url 'music:album_detail_frontend' s.album %}">{{ s.album }}</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div style="text-align: center; display: flex; align-items: center; justify-content: center;"
+                 class="song-row-heart {% if s.is_liked %}is-liked{% endif %}" data-song-id="{{ s.id }}"
+                 onclick="event.stopPropagation(); toggleLike({{ s.id }}, this)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#ff4444" viewBox="0 0 16 16" class="heart-filled">
+                    <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="heart-empty">
+                    <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"/>
+                </svg>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center" style="padding: 100px 0; color: rgba(255,255,255,0.3);">
+            <h3>No songs found for this artist.</h3>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% elif active_tab == 'albums' %}
+    <!-- Album Grid View -->
+    <div class="catalog-grid">
+        {% for album in artist.albums %}
+        <div class="catalog-card" onclick="const tUrl='{% url 'music:album_detail_frontend' album.name %}'; if(window.navigatePage) window.navigatePage(tUrl); else window.location.href=tUrl;">
+            <img src="{{ album.cover }}" onerror="this.src='/media/covers/default_cover.jpg'">
+            <h5>{{ album.name }}</h5>
+            <p>{{ album.song_count }} {{ album.song_count|pluralize:"Song,Songs" }}</p>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center" style="padding: 100px 0; color: rgba(255,255,255,0.3);">
+            <h3>No albums found for this artist.</h3>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

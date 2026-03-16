@@ -1,0 +1,519 @@
+{% extends 'music/base.html' %}
+{% load static %}
+{% load music_tags %}
+
+{% block title %}Playlist - {{ playlist.name }}{% endblock %}
+
+{% block content %}
+{% if is_edit_mode %}
+<style>
+    /* Disable all entrance animations and transitions specifically for edit mode */
+    .playlist-detail-container, #dynamic-content {
+        animation: none !important;
+        opacity: 1 !important;
+        transition: none !important;
+    }
+</style>
+{% endif %}
+<div class="playlist-detail-container page-entrance" data-playlist-id="{{ playlist.id }}">
+    
+    <!-- View Mode -->
+    <div id="playlist-view-mode" style="{% if is_edit_mode %}display: none;{% endif %}">
+    {% if playlist.id != 'recent' %}
+    <div class="playlist-detail-header">
+        <div style="position: relative; flex-shrink: 0;">
+            <img src="{{ playlist.cover }}" class="playlist-detail-cover" onerror="this.src='/media/playlists/default_playlist.png'">
+            {% if playlist.is_private %}
+            <div class="private-lock-overlay" style="border-radius: 12px; background: rgba(0, 0, 0, 0.4);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00C78A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            {% endif %}
+        </div>
+        <div class="playlist-detail-info">
+            <h1 class="playlist-detail-title" style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 12px;">
+                <span>{{ playlist.name }}</span>
+                {% if request.user.is_authenticated and request.user.username == playlist.creator and playlist.id != 'favorites' %}
+                <button class="row-action-btn" 
+                        style="display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); border-radius: 50%; width: 30px; height: 30px; padding: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); cursor: pointer; color: rgba(255,255,255,0.7); position: relative; top: -5px; flex: none;" 
+                        onclick="togglePlaylistEdit(true)" 
+                        onmouseover="this.style.background='rgba(0, 199, 138, 0.15)'; this.style.color='#00C78A'; this.style.borderColor='rgba(0, 199, 138, 0.4)'; this.style.transform='scale(1.1)';"
+                        onmouseout="this.style.background='rgba(255,255,255,0.08)'; this.style.color='rgba(255,255,255,0.7)'; this.style.borderColor='rgba(255,255,255,0.1)'; this.style.transform='scale(1)';"
+                        title="Edit Playlist">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                        <path d="m15 5 4 4"/>
+                    </svg>
+                </button>
+                {% endif %}
+            </h1>
+            
+            <div class="playlist-detail-meta" style="display: flex; align-items: center; gap: 10px; position: relative;">
+                {% if playlist.id != 'favorites' and playlist.id != 'recent' %}
+                <img src="{{ playlist.creator_avatar }}" class="creator-avatar" style="background: transparent;" onerror="this.onerror=null; this.src='/media/avatars/default.jpeg'">
+                <span><b>{{ playlist.creator }}</b></span>
+                <span style="opacity: 0.5">•</span>
+                <span>{{ playlist.created_at }} Created</span>
+                <span style="opacity: 0.5">•</span>
+                {% endif %}
+                <span>{{ playlist.song_count }} {{ playlist.song_count|pluralize:"Song,Songs" }}</span>
+                {% if not playlist.is_private and playlist.id != 'favorites' and playlist.id != 'recent' %}
+                <span style="opacity: 0.5">•</span>
+                <span>{{ playlist.favorited_count }} {{ playlist.favorited_count|pluralize:"Star,Stars" }}</span>
+                {% endif %}
+
+                {% if playlist.introduction %}
+                <div class="playlist-info-tag" style="display: flex; align-items: center; margin-left: 2px; position: relative;">
+                    <div class="playlist-info-trigger" style="cursor: help; color: rgba(255,255,255,0.3); transition: all 0.3s; display: flex; align-items: center;"
+                         onmouseover="this.style.color='rgba(255,255,255,0.8)'; const tt=document.getElementById('hover-description'); tt.style.opacity='1'; tt.style.visibility='visible'; tt.style.transform='translateY(-50%) translateX(0)';"
+                         onmouseout="this.style.color='rgba(255,255,255,0.3)'; const tt=document.getElementById('hover-description'); tt.style.opacity='0'; tt.style.visibility='hidden'; tt.style.transform='translateY(-50%) translateX(10px)';"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                    </div>
+
+                    <div id="hover-description" style="position: absolute; left: 30px; top: 50%; transform: translateY(-50%) translateX(10px); opacity: 0; visibility: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; width: max-content; max-width: 450px; z-index: 100;">
+                        <p class="playlist-description" style="color: rgba(255,255,255,0.6); font-size: 14px; line-height: 1.6; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 10px 15px; border-radius: 8px; border-left: 3px solid rgba(0, 199, 138, 0.5); margin: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+                            {{ playlist.introduction }}
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="playlist-detail-actions">
+                <button class="action-btn btn-play-all {% if not playlist.songs %}disabled{% endif %}" onclick="playPlaylistSongs([{% for s in playlist.songs %}{
+                        url: '{{ s.file_url }}',
+                        title: '{{ s.title|escapejs }}',
+                        artist: '{{ s.artist|escapejs }}',
+                        cover: '{{ s.cover }}',
+                        id: '{{ s.id }}',
+                        album: '{{ s.album|escapejs }}',
+                        isLiked: {% if s.is_liked %}true{% else %}false{% endif %}
+                    }{% if not forloop.last %},{% endif %}{% endfor %}])">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802 0 0 1 0 1.393z"/>
+                    </svg>
+                    Play All
+                </button>
+                <button class="action-btn btn-glass {% if not playlist.songs %}disabled{% endif %}" onclick="window.location.href='/api/download-playlist/{{ playlist.id }}/'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                    </svg>
+                    Download All
+                </button>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div style="padding: 20px 0 40px 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 30px;">
+        <h1 style="font-size: 32px; font-weight: 700; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">{{ playlist.name }}</h1>
+        <p style="color: rgba(255, 255, 255, 0.5); margin-top: 10px;">{{ playlist.songs|length }} recently played songs</p>
+    </div>
+    {% endif %}
+
+    <div class="song-table-container">
+        <div class="song-row song-header" style="display: grid !important; grid-template-columns: 50px 1.5fr 150px 150px 1fr 60px !important; column-gap: 20px; align-items: center; padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.1) !important; font-weight: 700; text-transform: uppercase; font-size: 13px; letter-spacing: 1.5px; opacity: 0.9;">
+            <div style="display: flex; align-items: center; justify-content: center;">#</div>
+            <div>Title</div>
+            <div></div> <!-- Actions spacer -->
+            <div>Album</div>
+            <div>Artist</div>
+            <div style="text-align: center;">Like</div>
+        </div>
+
+        <div class="song-list-body">
+        {% if not playlist.songs %}
+        <div style="text-align: center; padding: 80px 20px; color: rgba(255, 255, 255, 0.4); text-shadow: 0 1px 3px rgba(0,0,0,0.5);">
+            {% if not request.user.is_authenticated %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--aurora-green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 25px; opacity: 1; filter: drop-shadow(0 2px 10px rgba(0, 199, 138, 0.3));">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="var(--aurora-green)" viewBox="0 0 16 16" style="margin-bottom: 25px; opacity: 1; filter: drop-shadow(0 4px 15px rgba(0, 199, 138, 0.4));">
+                    <path d="M6 13c0 1.105-1.12 2-2.5 2S1 14.105 1 13c0-1.104 1.12-2 2.5-2s2.5.896 2.5 2zm9-2c0 1.105-1.12 2-2.5 2s-2.5-.895-2.5-2 1.12-2 2.5-2 2.5.895 2.5 2z"/>
+                    <path fill-rule="evenodd" d="M14 11V2h1v9h-1zM6 3V2h1v1H6z"/>
+                    <path d="M6.79 6.093A.5.5 0 0 0 6 6.5v7c0 .59.337 1.132.857 1.41.51.273 1.13.242 1.601-.083l4-2.75A.5.5 0 0 0 12.5 11.5v-7c0-.59-.337-1.132-.857-1.41a1.48 1.48 0 0 0-1.6-.03l-4 2.75A.5.5 0 0 0 6.79 6.093z"/>
+                </svg>
+            {% endif %}
+            <br>
+            {% if not request.user.is_authenticated %}
+                <span style="font-weight: 600; color: rgba(255,255,255,0.85);">Login required to view this</span>
+                <p style="font-size: 14px; color: rgba(255, 255, 255, 0.4); margin-top: 10px;">Please <a href="javascript:void(0)" onclick="openLoginModal()" style="color: #00C78A; text-decoration: none; font-weight: 600;">Login</a> to sync your music</p>
+            {% else %}
+                <span style="font-weight: 600; color: rgba(255,255,255,0.85);">Your playlist is empty</span>
+                <p style="font-size: 14px; color: rgba(255, 255, 255, 0.4); margin-top: 10px;">Add some songs to get started!</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% for s in playlist.songs %}
+        <div class="song-row" data-song-id="{{ s.id }}" 
+             style="display: grid !important; grid-template-columns: 50px 1.5fr 150px 150px 1fr 60px !important; column-gap: 20px; align-items: center; padding: 12px 20px; border-radius: 12px; transition: all 0.2s; cursor: default; color: rgba(255, 255, 255, 0.8); font-size: 14px; height: 65px; overflow: hidden;">
+            <div class="song-index-col" style="color: rgba(255,255,255,0.95); position: relative; width: 50px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                <span class="index-num">{{ forloop.counter|stringformat:"02d" }}</span>
+                <div class="index-play-btn" onclick="loadAndPlay('{{ s.file_url|escapejs }}', '{{ s.title|escapejs }}', '{{ s.artist|escapejs }}', '{{ s.cover|escapejs }}', {{ s.id }})">
+                    <svg class="icon-play" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+                    </svg>
+                    <svg class="icon-pause" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16" style="display: none;">
+                        <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="song-cell-title" style="display: flex; align-items: center; gap: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <div style="position: relative; cursor: pointer; flex-shrink: 0; display: flex; align-items: center;" onclick="loadAndPlay('{{ s.file_url|escapejs }}', '{{ s.title|escapejs }}', '{{ s.artist|escapejs }}', '{{ s.cover|escapejs }}', {{ s.id }})">
+                <img src="{{ s.cover }}" class="song-cell-img" alt="{{ s.title }}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;" onerror="this.onerror=null; this.src='/media/covers/default_cover.jpg'">
+                </div>
+                <div class="song-title-wrapper" style="width: 100%; min-width: 0; overflow: hidden;">
+                    <div class="song-title-marquee">
+                        <span class="song-title-text song-title-link">{{ s.title }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div>
+                <div class="row-action-pill {% if playlist.id == 'recent' %}is-3-buttons{% endif %}" onclick="event.stopPropagation()">
+                    <div class="row-action-btn" onclick="downloadSong('{{ s.file_url|escapejs }}', '{{ s.title|escapejs }}')" title="Download">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                    </div>
+                    <div class="row-action-btn" onclick="window.triggerAddToPlaylist({{ s.id }})" title="Add to Playlist">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 12H3"></path><path d="M16 6H3"></path><path d="M16 18H3"></path><path d="M18 9v6"></path><path d="M21 12h-6"></path>
+                        </svg>
+                    </div>
+                    <div class="row-action-btn" onclick="event.stopPropagation(); navigatePage('/comments/{{ s.id }}/')" title="Comment">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
+                    {% if playlist.id != 'recent' %}
+                    <div class="row-action-btn" onclick="removeFromPlaylist('{{ playlist.id }}', {{ s.id }})" title="Delete">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Album -->
+            <div class="hover-marquee-wrapper {% if not s.album or 'unknown' in s.album|lower %}metadata-unknown{% endif %}">
+                <div class="hover-marquee-content">
+                    {% if not s.album or 'unknown' in s.album|lower %}
+                        <span>{{ s.album|default:"Unknown Album" }}</span>
+                    {% else %}
+                        <a href="{% url 'music:album_detail_frontend' s.album %}">{{ s.album }}</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Artist -->
+            <div class="hover-marquee-wrapper {% if not s.artist or 'unknown' in s.artist|lower %}metadata-unknown{% endif %}" 
+                {% if s.artist and 'unknown' not in s.artist|lower %}style="cursor: pointer;" onclick="event.stopPropagation(); const tUrl='/library/?q={{ s.artist|urlencode }}&tab=all_songs'; if(window.navigatePage) window.navigatePage(tUrl); else window.location.href=tUrl;"{% endif %}>
+                <div class="hover-marquee-content">
+                    {% if not s.artist or 'unknown' in s.artist|lower %}
+                        <span>{{ s.artist|default:"Unknown Artist" }}</span>
+                    {% else %}
+                        {% for artist_name in s.artist|split_artists %}
+                            <a href="{% url 'music:artist_detail_frontend' artist_name %}" class="artist-link" onclick="event.stopPropagation();">{{ artist_name }}</a>{% if not forloop.last %}<span class="artist-separator">/</span>{% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Like -->
+            <div style="text-align: center; display: flex; align-items: center; justify-content: center;"
+                 class="song-row-heart {% if s.is_liked %}is-liked{% endif %}" data-song-id="{{ s.id }}"
+                 onclick="event.stopPropagation(); toggleLike({{ s.id }}, this)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#ff4444" viewBox="0 0 16 16" class="heart-filled">
+                    <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="heart-empty">
+                    <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"/>
+                </svg>
+            </div>
+        </div>
+        {% endfor %}
+        </div>
+    </div>
+    </div>
+
+    <!-- Edit Mode -->
+    <div id="playlist-edit-mode" style="{% if not is_edit_mode %}display: none;{% endif %} padding: 20px;">
+        <h2 style="font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 30px;">Edit Playlist Info</h2>
+        
+        <div style="display: flex; gap: 40px; align-items: flex-start;">
+            <!-- Left Side: Form -->
+            <div style="flex: 1; max-width: 600px;">
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; color: rgba(255, 255, 255, 0.5); margin-bottom: 8px; font-size: 14px; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">Name:</label>
+                    <div style="position: relative;">
+                        <input type="text" id="edit-playlist-name" value="{{ playlist.name }}" 
+                               maxlength="40"
+                               style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 15px; color: #fff; font-size: 16px; outline: none; transition: all 0.3s;"
+                               onfocus="this.style.borderColor='var(--aurora-green)'; this.style.background='rgba(255,255,255,0.08)';"
+                               onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(255,255,255,0.05)';"
+                               oninput="document.getElementById('name-counter').innerText = this.value.length + '/40'">
+                        <span id="name-counter" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, 0.25); font-size: 12px;">{{ playlist.name|length }}/40</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <label style="display: block; color: rgba(255, 255, 255, 0.5); margin-bottom: 8px; font-size: 14px; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">Description:</label>
+                    <div style="position: relative;">
+                        <textarea id="edit-playlist-intro" 
+                                  maxlength="1000"
+                                  style="width: 100%; height: 200px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 15px; color: #fff; font-size: 15px; line-height: 1.6; outline: none; resize: none; transition: all 0.3s;"
+                                  onfocus="this.style.borderColor='var(--aurora-green)'; this.style.background='rgba(255,255,255,0.08)';"
+                                  onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(255,255,255,0.05)';"
+                                  oninput="document.getElementById('intro-counter').innerText = this.value.length + '/1000'">{{ playlist.introduction|default:"" }}</textarea>
+                        <span id="intro-counter" style="position: absolute; right: 12px; bottom: 12px; color: rgba(255, 255, 255, 0.25); font-size: 12px;">{{ playlist.introduction|length }}/1000</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label class="playlist-checkbox-container" style="display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="edit-is-private" class="playlist-checkbox" 
+                               {% if playlist.is_private %}checked{% endif %}
+                               style="width: 18px; height: 18px; accent-color: var(--aurora-green); cursor: pointer;">
+                        <span style="color: rgba(255,255,255,0.85); font-size: 15px; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">Set as private playlist</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 15px;">
+                    <button onclick="savePlaylistEdit()" 
+                            style="background: var(--aurora-bg-alpha); color: var(--aurora-green); border: 1px solid var(--aurora-border-alpha); padding: 12px 35px; border-radius: 25px; font-weight: 700; cursor: pointer; transition: all 0.3s; font-size: 15px;"
+                            onmouseover="this.style.background='var(--aurora-bg-alpha-hover)'; this.style.color='var(--aurora-green-hover)'; this.style.borderColor='var(--aurora-green)'; this.style.boxShadow='0 5px 15px var(--aurora-shadow)';"
+                            onmouseout="this.style.background='var(--aurora-bg-alpha)'; this.style.color='var(--aurora-green)'; this.style.borderColor='var(--aurora-border-alpha)'; this.style.boxShadow='none';">Save</button>
+                    <button onclick="togglePlaylistEdit(false)" 
+                            style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.1); padding: 12px 35px; border-radius: 25px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 15px;"
+                            onmouseover="this.style.background='rgba(255,255,255,0.15)'; this.style.color='#fff';"
+                            onmouseout="this.style.background='rgba(255,255,255,0.08)'; this.style.color='rgba(255,255,255,0.7)';">Cancel</button>
+                </div>
+            </div>
+
+            <div style="flex-shrink: 0; width: 220px;">
+                <label style="display: block; color: rgba(255, 255, 255, 0.5); margin-bottom: 8px; font-size: 14px; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">Playlist Cover:</label>
+                <div style="position: relative; width: 220px; height: 220px;">
+                    <div id="cover-preview-container" style="width: 220px; height: 220px; border-radius: 12px; overflow: hidden; background: #222; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; cursor: pointer;"
+                         onclick="document.getElementById('edit-playlist-cover').click()">
+                        <img id="edit-cover-preview" src="{{ playlist.cover }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/media/playlists/default_playlist.png'">
+                        <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; color: #fff;"
+                             onmouseover="this.style.opacity='1'"
+                             onmouseout="this.style.opacity='0'">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+                                <path d="M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <input type="file" id="edit-playlist-cover" accept="image/*" style="display: none;" 
+                           onclick="this.value=null" onchange="previewPlaylistCover(this)">
+                </div>
+                <p style="margin-top: 15px; font-size: 12px; color: rgba(255, 255, 255, 0.3); text-align: center; line-height: 1.4; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+                    Click the image to upload a new cover
+                </p>
+                
+                <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                    <button onclick="confirmDeletePlaylist()" 
+                            style="width: 100%; background: rgba(255, 68, 68, 0.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: #ff5c5c; border: 1px solid rgba(255, 68, 68, 0.3); padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s;"
+                            onmouseover="this.style.background='rgba(255, 68, 68, 0.2)'; this.style.borderColor='rgba(255, 68, 68, 0.5)';"
+                            onmouseout="this.style.background='rgba(255, 68, 68, 0.1)'; this.style.borderColor='rgba(255, 68, 68, 0.3)';"
+                    >
+                        Delete Playlist
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// 1. Define utility helpers first
+if (!String.prototype.rstrip) {
+    String.prototype.rstrip = function(char) {
+        if (char === undefined) char = ' ';
+        let result = this;
+        while (result.endsWith(char)) result = result.slice(0, -1);
+        return result;
+    };
+}
+
+// 2. The core sync logic
+(function() {
+    var pId = '{{ playlist.id }}';
+    console.log("[PlaylistSPA] Script initialized for Playlist ID:", pId);
+
+    // 2. The core sync logic
+    window.syncEditStateFromURL = function() {
+        const isEditPath = /\/edit\/?$/.test(window.location.pathname);
+        const viewMode = document.getElementById('playlist-view-mode');
+        const editMode = document.getElementById('playlist-edit-mode');
+        
+        if (viewMode && editMode) {
+            if (isEditPath) {
+                if (viewMode.style.display !== 'none') {
+                    viewMode.style.display = 'none';
+                    editMode.style.display = 'block';
+                    console.log("[PlaylistSPA] Visibility: Switched to Edit Mode");
+                }
+            } else {
+                if (editMode.style.display !== 'none') {
+                    viewMode.style.display = 'block';
+                    editMode.style.display = 'none';
+                    console.log("[PlaylistSPA] Visibility: Switched to View Mode");
+                }
+            }
+        }
+    };
+
+    // 3. Define navigation functions
+    window.togglePlaylistEdit = function(show, push = true) {
+        console.log("[PlaylistSPA] togglePlaylistEdit called. show:", show, "id:", pId);
+        
+        const viewMode = document.getElementById('playlist-view-mode');
+        const editMode = document.getElementById('playlist-edit-mode');
+        const container = document.querySelector('.playlist-detail-container');
+        
+        if (show) {
+            if (viewMode) viewMode.style.display = 'none';
+            if (editMode) editMode.style.display = 'block';
+        } else {
+            if (viewMode) viewMode.style.display = 'block';
+            if (editMode) editMode.style.display = 'none';
+            
+            // Re-trigger entrance animation when returning to view mode
+            if (container) {
+                container.classList.remove('page-entrance');
+                void container.offsetWidth; // force reflow
+                container.classList.add('page-entrance');
+            }
+        }
+
+        if (push) {
+            const targetUrl = show ? `/playlist/${pId}/edit/` : `/playlist/${pId}/`;
+            console.log("[PlaylistSPA] Navigation: Updating URL (no FX):", targetUrl);
+            history.pushState({ url: targetUrl }, document.title, targetUrl);
+            // Removing navigatePage call here to avoid the global fade transition
+        }
+    };
+
+    window.previewPlaylistCover = function(input) {
+        if (input.files && input.files[0]) {
+            openHubCropper(input.files[0], (croppedFile) => {
+                window.lastCroppedFile = croppedFile;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('edit-cover-preview').src = e.target.result;
+                }
+                reader.readAsDataURL(croppedFile);
+            });
+        }
+    };
+
+    window.savePlaylistEdit = function() {
+        const name = document.getElementById('edit-playlist-name').value;
+        const intro = document.getElementById('edit-playlist-intro').value;
+
+        if (!name.trim()) {
+            showHubToast('Playlist name cannot be empty');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('playlist_id', pId);
+        formData.append('name', name);
+        formData.append('introduction', intro);
+        
+        const isPrivateEl = document.getElementById('edit-is-private');
+        if (isPrivateEl) {
+            formData.append('is_private', isPrivateEl.checked ? 'true' : 'false');
+        }
+        
+        const coverInput = document.getElementById('edit-playlist-cover');
+        if (window.lastCroppedFile) {
+            formData.append('cover', window.lastCroppedFile);
+        } else if (coverInput.files[0]) {
+            formData.append('cover', coverInput.files[0]);
+        }
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        console.log("[PlaylistSPA] Saving Playlist ID:", pId);
+        fetch("{% url 'music:update_playlist' %}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showHubToast("Changes saved!");
+                if (typeof loadSidebarPlaylists === 'function') loadSidebarPlaylists();
+                const targetUrl = `/playlist/${pId}/`;
+                console.log("[PlaylistSPA] Save Success. Navigating to:", targetUrl);
+                if (typeof navigatePage === 'function') {
+                    navigatePage(targetUrl, true);
+                } else {
+                    window.location.href = targetUrl;
+                }
+            } else {
+                showHubToast('Update failed: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('[PlaylistSPA] Error saving:', error);
+            showHubToast('Submission error');
+        });
+    };
+
+    window.confirmDeletePlaylist = function() {
+        showHubConfirm('Delete Playlist', 'Are you sure you want to delete this playlist? This action cannot be undone.', () => {
+            const formData = new FormData();
+            formData.append('playlist_id', pId);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            fetch("/api/delete-playlist/", {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showHubToast("Playlist deleted");
+                    if (typeof loadSidebarPlaylists === 'function') loadSidebarPlaylists();
+                    if (typeof navigatePage === 'function') {
+                        navigatePage('/library/', true);
+                    } else {
+                        window.location.href = '/library/';
+                    }
+                } else {
+                    showHubToast("Error: " + data.error);
+                }
+            });
+        });
+    };
+
+    // 4. Hook into page initialization lifecycle (Safely call global features)
+    const oldInit = window.initPageFeatures;
+    window.initPageFeatures = function() {
+        if (typeof oldInit === 'function') oldInit();
+        window.syncEditStateFromURL();
+    };
+
+})();
+</script>
+{% endblock %}

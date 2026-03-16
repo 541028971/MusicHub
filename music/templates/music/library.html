@@ -1,5 +1,6 @@
 {% extends 'music/base.html' %}
 {% load static %}
+{% load music_tags %}
 
 {% block title %}Library Catalog{% endblock %}
 
@@ -16,6 +17,13 @@
         align-items: center;
         gap: 30px;
         margin-bottom: 25px;
+    }
+
+    .empty-message {
+        text-align: center;
+        padding: 100px 20px;
+        color: rgba(255, 255, 255, 0.45);
+        text-shadow: 0 1px 3px rgba(0,0,0,0.5);
     }
 
     .library-nav-item {
@@ -44,9 +52,9 @@
         left: 0;
         width: 100%;
         height: 3px;
-        background: #00C78A;
+        background: var(--aurora-green);
         border-radius: 2px;
-        box-shadow: 0 0 10px rgba(0, 199, 138, 0.5);
+        box-shadow: 0 0 10px var(--aurora-shadow);
     }
 
     .library-controls {
@@ -58,24 +66,111 @@
 
     .control-group {
         display: flex;
+        align-items: center;
         gap: 15px;
     }
 
-    .library-select {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #fff;
-        padding: 6px 15px;
-        border-radius: 20px;
-        outline: none;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: all 0.3s;
+    /* --- Aurora Custom Select Component --- */
+    .aurora-select-container {
+        position: relative;
+        min-width: 180px;
+        user-select: none;
     }
 
-    .library-select:hover {
+    .aurora-select-trigger {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        padding: 8px 18px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .aurora-select-container.open .aurora-select-trigger {
+        background-color: rgba(255, 255, 255, 0.12);
+        border-color: var(--aurora-green);
+        box-shadow: 0 0 15px rgba(0, 199, 138, 0.2);
+    }
+
+    .aurora-select-trigger:hover {
+        background-color: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+    }
+
+    .aurora-select-icon {
+        transition: transform 0.3s;
+        opacity: 0.7;
+    }
+
+    .aurora-select-container.open .aurora-select-icon {
+        transform: rotate(180deg);
+        opacity: 1;
+    }
+
+    .aurora-select-options {
+        position: absolute;
+        top: calc(100% + 10px);
+        left: 0;
+        right: 0;
+        background: rgba(25, 25, 25, 0.95);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 8px;
+        z-index: 1000;
+        display: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        transform: translateY(-10px);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .aurora-select-container.open .aurora-select-options {
+        display: block;
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .lib-tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 20px;
+        transition: all 0.3s;
+        color: rgba(255, 255, 255, 0.55);
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .aurora-option {
+        padding: 10px 15px;
+        border-radius: 10px;
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 0.88rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .aurora-option:hover {
         background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        padding-left: 18px;
+    }
+
+    .aurora-option.selected {
+        background: rgba(0, 199, 138, 0.15);
+        color: var(--aurora-green);
+        font-weight: 600;
     }
 
     /* Album/Artist Cards for their respective tabs */
@@ -151,6 +246,7 @@
 {% endblock %}
 
 {% block content %}
+<div class="page-entrance">
 <div class="library-header">
     {% if is_search_page %}
     <h2 style="margin-bottom: 20px; color: #fff;">Search Results for "{{ q }}"</h2>
@@ -165,34 +261,48 @@
     </div>
     {% endif %}
 
-    <div class="library-controls">
+    <div class="library-controls" onclick="event.stopPropagation()">
         <div class="control-group">
-            <select class="library-select"
-                onchange="window.location.href='?tab={{ active_tab }}&sort=' + this.value + '&genre={{ current_genre }}'">
-                <option value="-id" {% if current_sort == "-id" %}selected{% endif %}>
-                    Sort by: Newest
-                </option>
-                <option value="name" {% if current_sort == "name" %}selected{% endif %}>
-                    Sort by: Name
-                </option>
-                <option value="popular" {% if current_sort == "popular" %}selected{% endif %}>
-                    Sort by: Popularity
-                </option>
-                <option value="date" {% if current_sort == "date" %}selected{% endif %}>
-                    Sort by: Release Date
-                </option>
-            </select>
+            <!-- Custom Sort Dropdown -->
+            <div class="aurora-select-container" id="sort-dropdown">
+                <div class="aurora-select-trigger">
+                    <span class="trigger-text">
+                        {% if current_sort == "-id" %}Sort by: Newest
+                        {% elif current_sort == "name" %}Sort by: Name
+                        {% elif current_sort == "popular" %}Sort by: Popularity
+                        {% elif current_sort == "date" %}Sort by: Release Date
+                        {% else %}Sort by: Default{% endif %}
+                    </span>
+                    <svg class="aurora-select-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="aurora-select-options">
+                    <div class="aurora-option {% if current_sort == 'name' %}selected{% endif %}" data-value="name">Sort by: Name</div>
+                    <div class="aurora-option {% if current_sort == '-id' %}selected{% endif %}" data-value="-id">Sort by: Newest</div>
+                    <div class="aurora-option {% if current_sort == 'popular' %}selected{% endif %}" data-value="popular">Sort by: Popularity</div>
+                    <div class="aurora-option {% if current_sort == 'date' %}selected{% endif %}" data-value="date">Sort by: Release Date</div>
+                </div>
+            </div>
 
             {% if active_tab == 'all_songs' %}
-            <select class="library-select"
-                onchange="window.location.href='?tab={{ active_tab }}&sort={{ current_sort }}&genre=' + this.value">
-                <option value="">All Genres</option>
-                {% for g in genres %}
-                <option value="{{ g }}" {% if current_genre == g %}selected{% endif %}>
-                    {{ g }}
-                </option>
-                {% endfor %}
-            </select>
+            <!-- Custom Genre Dropdown -->
+            <div class="aurora-select-container" id="genre-dropdown">
+                <div class="aurora-select-trigger">
+                    <span class="trigger-text">
+                        {% if current_genre %}{{ current_genre }}{% else %}All Genres{% endif %}
+                    </span>
+                    <svg class="aurora-select-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="aurora-select-options">
+                    <div class="aurora-option {% if not current_genre %}selected{% endif %}" data-value="">All Genres</div>
+                    {% for g in genres %}
+                    <div class="aurora-option {% if current_genre == g %}selected{% endif %}" data-value="{{ g }}">{{ g }}</div>
+                    {% endfor %}
+                </div>
+            </div>
             {% endif %}
         </div>
 
@@ -213,20 +323,20 @@
 <div class="song-table-container">
     <div class="song-row song-header"
         style="display: grid !important; grid-template-columns: 50px 1.5fr 150px 150px 1fr 60px !important; column-gap: 20px; align-items: center; padding: 12px 20px; font-weight: 700; color: #fff; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.9;">
-        <div>#</div>
+        <div style="display: flex; align-items: center; justify-content: center;">#</div>
         <div>Title</div>
         <div></div> <!-- Space for actions -->
         <div>Album</div>
         <div>Artist</div>
         <div style="text-align: center;">Like</div>
     </div>
-
+    <div class="song-list-body">
     {% for song in page_obj %}
     <div class="song-row" data-song-id="{{ song.id }}"
-        style="display: grid !important; grid-template-columns: 50px 1.5fr 150px 150px 1fr 60px !important; column-gap: 20px; align-items: center; padding: 12px 20px; border-radius: 12px; transition: all 0.2s; cursor: default; color: rgba(255, 255, 255, 0.8); font-size: 14px; margin-bottom: 5px;">
-        <div class="song-index-col" style="color: rgba(255,255,255,0.95); position: relative; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-            <span class="index-num">{{ forloop.counter|add:page_obj.start_index|add:-1 }}</span>
-            <div class="index-play-btn" onclick="loadAndPlay('{{ song.download_link.url }}', '{{ song.name }}', '{{ song.arrangement }}', '{{ song.cover.url }}', '{{ song.id }}', false)">
+        style="display: grid !important; grid-template-columns: 50px 1.5fr 150px 150px 1fr 60px !important; column-gap: 20px; align-items: center; padding: 12px 20px; border-radius: 12px; transition: all 0.2s; cursor: default; color: rgba(255, 255, 255, 0.8); font-size: 14px; height: 65px; overflow: hidden;">
+        <div class="song-index-col" style="color: rgba(255,255,255,0.95); position: relative; width: 50px; height: 35px; display: flex; align-items: center; justify-content: center;">
+            <span class="index-num">{{ forloop.counter|add:page_obj.start_index|add:-1|stringformat:"02d" }}</span>
+            <div class="index-play-btn" onclick="loadAndPlay('{{ song.download_link.url|escapejs }}', '{{ song.name|escapejs }}', '{{ song.arrangement|escapejs }}', '{{ song.cover.url|escapejs }}', '{{ song.id|escapejs }}')">
                 <svg class="icon-play" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
                     <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
                 </svg>
@@ -237,18 +347,19 @@
         </div>
         <div class="song-cell-title"
              style="display: flex; align-items: center; gap: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-            <div style="position: relative; cursor: pointer; display: flex; align-items: center;" onclick="loadAndPlay('{{ song.download_link.url }}', '{{ song.name }}', '{{ song.arrangement }}', '{{ song.cover.url }}', '{{ song.id }}', false)">
+            <div style="position: relative; cursor: pointer; display: flex; align-items: center;" onclick="loadAndPlay('{{ song.download_link.url|escapejs }}', '{{ song.name|escapejs }}', '{{ song.arrangement|escapejs }}', '{{ song.cover.url|escapejs }}', '{{ song.id|escapejs }}')">
                 <img src="{{ song.cover.url }}" class="song-cell-img"
+                    alt="{{ song.name }}"
                     style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;"
-                    onerror="this.src='/static/music/images/grid%20(1).jpg'">
+                    onerror="this.onerror=null; this.src='/media/covers/default_cover.jpg'">
             </div>
-            <span>{{ song.name }}</span>
+            <span class="song-title-text">{{ song.name }}</span>
         </div>
 
         <!-- Actions -->
         <div>
             <div class="row-action-pill" onclick="event.stopPropagation()">
-                <div class="row-action-btn" title="Download" onclick="downloadSong('{{ song.download_link.url }}', '{{ song.name }}')">
+                <div class="row-action-btn" title="Download" onclick="downloadSong('{{ song.download_link.url|escapejs }}', '{{ song.name|escapejs }}')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -256,7 +367,7 @@
                         <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
                 </div>
-                <div class="row-action-btn add-to-playlist-item" data-song-id="{{ song.id }}" title="Add to Playlist">
+                <div class="row-action-btn" onclick="event.stopPropagation(); window.triggerAddToPlaylist({{ song.id }})" title="Add to Playlist">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M11 12H3"></path>
@@ -284,11 +395,36 @@
             </div>
         </div>
 
-        <div style="color: rgba(255,255,255,0.95); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ song.album }}</div>
+        <div class="hover-marquee-wrapper {% if not song.album or 'unknown' in song.album|lower %}metadata-unknown{% endif %}">
+            <div class="hover-marquee-content">
+                {% if not song.album or 'unknown' in song.album|lower %}
+                    <span>{{ song.album|default:"Unknown Album" }}</span>
+                {% else %}
+                    <a href="{% url 'music:album_detail_frontend' song.album %}">{{ song.album }}</a>
+                {% endif %}
+            </div>
+        </div>
 
-        <div onclick="event.stopPropagation(); window.location.href='?q={{ song.arrangement }}&tab=all_songs'"
-            style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; color: #00C78A;">
-            {{ song.arrangement }}
+        <div class="hover-marquee-wrapper {% if not song.arrangement or 'unknown' in song.arrangement|lower %}metadata-unknown{% endif %}" 
+            {% if song.arrangement and 'unknown' not in song.arrangement|lower %}
+                {% with artists=song.arrangement|split_artists %}
+                    {% if artists|length > 1 %}
+                        onclick="event.stopPropagation(); const tUrl='/library/?q={{ song.arrangement|urlencode }}&tab=all_songs'; if(window.navigatePage) window.navigatePage(tUrl); else window.location.href=tUrl;"
+                    {% else %}
+                        onclick="event.stopPropagation(); const tUrl='{% url 'music:artist_detail_frontend' song.arrangement %}'; if(window.navigatePage) window.navigatePage(tUrl); else window.location.href=tUrl;"
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
+            style="{% if song.arrangement and 'unknown' not in song.arrangement|lower %}cursor: pointer;{% endif %}">
+            <div class="hover-marquee-content">
+                {% if not song.arrangement or 'unknown' in song.arrangement|lower %}
+                    <span>{{ song.arrangement|default:"Unknown Artist" }}</span>
+                {% else %}
+                    {% for artist_name in song.arrangement|split_artists %}
+                        <a href="{% url 'music:artist_detail_frontend' artist_name %}" class="artist-link" onclick="event.stopPropagation();">{{ artist_name }}</a>{% if not forloop.last %}<span class="artist-separator">/</span>{% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
         </div>
 
         <!-- Like Column -->
@@ -306,40 +442,66 @@
         </div>
     </div>
     {% empty %}
-    <div class="text-center" style="padding: 100px 0; color: rgba(255,255,255,0.3);">
-        <h3>No songs found matching your search.</h3>
+    <div class="text-center" style="padding: 100px 0; color: rgba(255, 255, 255, 0.6); text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+        <div style="margin-bottom: 20px; opacity: 1;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="var(--aurora-green)" viewBox="0 0 16 16" style="filter: drop-shadow(0 4px 15px rgba(0, 199, 138, 0.4));">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+            </svg>
+        </div>
+        <h3 style="font-weight: 700; letter-spacing: 0.5px;">No songs found matching your search.</h3>
     </div>
     {% endfor %}
+    </div>
+
+    <!-- Premium Glassmorphic Pagination (Pushed to bottom by min-height) -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination-wrapper">
+        <div class="pagination-container" style="margin-top: 0;">
+            <div class="pagination-glass">
+                {% if page_obj.has_previous %}
+                <a href="?tab={{ active_tab }}&sort={{ current_sort }}&genre={{ current_genre }}&q={{ q }}&page={{ page_obj.previous_page_number }}" class="page-link-btn" title="Previous Page">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </a>
+                {% else %}
+                <div class="page-link-btn disabled">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </div>
+                {% endif %}
+
+                <div class="page-info-box">
+                    <span class="page-info-current">{{ page_obj.number|stringformat:"02d" }}</span>
+                    <span style="opacity: 0.2; margin: 0 4px;">/</span>
+                    <span class="page-info-total">{{ page_obj.paginator.num_pages|stringformat:"02d" }}</span>
+                </div>
+
+                {% if page_obj.has_next %}
+                <a href="?tab={{ active_tab }}&sort={{ current_sort }}&genre={{ current_genre }}&q={{ q }}&page={{ page_obj.next_page_number }}" class="page-link-btn" title="Next Page">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </a>
+                {% else %}
+                <div class="page-link-btn disabled">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
-
-<!-- Pagination -->
-{% if page_obj.paginator.num_pages > 1 %}
-<div style="margin-top: 40px; display: flex; justify-content: center;">
-    <nav aria-label="Page navigation">
-        <ul class="pagination">
-            {% if page_obj.has_previous %}
-            <li><a
-                    href="?tab={{ active_tab }}&sort={{ current_sort }}&genre={{ current_genre }}&q={{ q }}&page={{ page_obj.previous_page_number }}">&laquo;</a>
-            </li>
-            {% endif %}
-
-            <li class="active"><span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
-
-            {% if page_obj.has_next %}
-            <li><a
-                    href="?tab={{ active_tab }}&sort={{ current_sort }}&genre={{ current_genre }}&q={{ q }}&page={{ page_obj.next_page_number }}">&raquo;</a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
-</div>
-{% endif %}
 
 {% elif active_tab == 'all_albums' %}
 <div class="catalog-grid">
     {% for album in albums %}
-    <div class="catalog-card" onclick="window.location.href='?q={{ album.album }}&tab=all_songs'">
-        <img src="/media/{{ album.cover }}" onerror="this.src='/static/music/images/grid%20(1).jpg'">
+    <div class="catalog-card" onclick="const tUrl='{% url 'music:album_detail_frontend' album.album %}'; if(window.navigatePage) window.navigatePage(tUrl); else window.location.href=tUrl;">
+        <img src="/media/{{ album.cover }}" onerror="this.onerror=null; this.src='/media/covers/default_cover.jpg'">
         <h5>{{ album.album }}</h5>
         <p>{{ album.song_count }} {{ album.song_count|pluralize:"Song,Songs" }}</p>
     </div>
@@ -353,11 +515,11 @@
 {% elif active_tab == 'all_artists' %}
 <div class="catalog-grid">
     {% for artist in artists %}
-    <div class="catalog-card" onclick="window.location.href='?q={{ artist.arrangement }}&tab=all_songs'">
+    <div class="catalog-card" onclick="const tUrl='{% url 'music:artist_detail_frontend' artist.arrangement %}'; if(window.navigatePage) window.navigatePage(tUrl); else window.location.href=tUrl;">
         <div class="artist-avatar" aria-label="{{ artist.arrangement }}">{{ artist.arrangement|slice:":1" }}</div>
         <h5>{{ artist.arrangement }}</h5>
         <p>{{ artist.song_count }} {{ artist.song_count|pluralize:"Song,Songs" }} | {{ artist.views }}
-            {{artist.views|pluralize:"View,Views" }}</p>
+            {{artist.views|pluralize:"Play,Plays" }}</p>
     </div>
     {% empty %}
     <div class="col-12 text-center" style="padding: 100px 0; color: rgba(255,255,255,0.3);">
@@ -366,4 +528,56 @@
     {% endfor %}
 </div>
 {% endif %}
+
+<script>
+    // Aurora Custom Select Navigation Logic - Immediate execution for SPA support
+    (function() {
+        const setupDropdown = (containerId, paramName) => {
+            const container = document.getElementById(containerId);
+            if (!container || container.dataset.initialized) return;
+
+            const trigger = container.querySelector('.aurora-select-trigger');
+            const options = container.querySelectorAll('.aurora-option');
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Close other dropdowns
+                document.querySelectorAll('.aurora-select-container').forEach(c => {
+                    if (c !== container) c.classList.remove('open');
+                });
+                container.classList.toggle('open');
+            });
+
+            options.forEach(opt => {
+                opt.addEventListener('click', () => {
+                    const value = opt.getAttribute('data-value');
+                    const url = new URL(window.location.href);
+                    url.searchParams.set(paramName, value);
+                    // Reset page to 1 when changing filters
+                    url.searchParams.set('page', '1');
+                    
+                    if (window.navigatePage) {
+                        window.navigatePage(url.href);
+                    } else {
+                        window.location.href = url.href;
+                    }
+                });
+            });
+            
+            container.dataset.initialized = "true";
+        };
+
+        setupDropdown('sort-dropdown', 'sort');
+        setupDropdown('genre-dropdown', 'genre');
+
+        // Close on outside click (only add once)
+        if (!window.selectOutsideClickBound) {
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.aurora-select-container').forEach(c => c.classList.remove('open'));
+            });
+            window.selectOutsideClickBound = true;
+        }
+    })();
+</script>
+</div>
 {% endblock %}

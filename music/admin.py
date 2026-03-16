@@ -5,12 +5,12 @@ from django.http import HttpResponseRedirect
 from django.db.models import Count
 from datetime import datetime, timedelta
 from django.db.models.functions import TruncDate
-from .models import User, Song, Playlist, Comment, PlayHistory, Announcement, Feedback, Invitation
+from .models import User, Song, Playlist, Comment, PlayHistory, Feedback, Invitation
 
 
 class CustomAdminSite(admin.AdminSite):
-    site_header = "MusicHub Admin Center"
-    site_title = "MusicHub Administration"
+    site_header = "Aurora Admin Center"
+    site_title = "Aurora Administration"
     index_title = "Welcome back, Administrator"
     login_template = 'admin/login.html'
     
@@ -83,9 +83,9 @@ class SongAdmin(admin.ModelAdmin):
     cover_preview.short_description = 'Cover'
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email', 'avatar_preview', 'identity', 'status_tag')
+    list_display = ('username', 'email', 'avatar_preview', 'status_tag')
     search_fields = ('username', 'email')
-    list_filter = ('identity', 'status')
+    list_filter = ('status',)
     actions = ['ban_users', 'unban_users']
     
     def avatar_preview(self, obj):
@@ -118,6 +118,5 @@ admin_site.register(Song, SongAdmin)
 admin_site.register(Playlist)
 admin_site.register(Comment)
 admin_site.register(PlayHistory)
-admin_site.register(Announcement)
 admin_site.register(Feedback)
 admin_site.register(Invitation)

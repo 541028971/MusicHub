@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User as AuthUser
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
+from django.conf import settings
 import os
 import re
 from mutagen.mp3 import MP3
@@ -16,14 +17,27 @@ def get_audio_duration(file_path):
     except Exception as e:
         return "00:00"
 
+def delete_file_on_disk(file_field):
+    """Helper to delete a file from the filesystem."""
+    if file_field and hasattr(file_field, 'path'):
+        try:
+            # Check existence immediately before trying to delete
+            if os.path.exists(file_field.path):
+                os.remove(file_field.path)
+        except Exception as e:
+            print(f"[Models] Error deleting file {file_field.name}: {e}")
+
 def song_cover_path(instance, filename):
     ext = filename.split('.')[-1]
-    # Keep alphanumeric characters including Unicode (Chinese, Japanese, etc.)
-    # Replace anything else with an underscore
     safe_name = re.sub(r'[^\w\s-]', '', instance.name).strip().replace(' ', '_')
-    # Add ID for uniqueness if available
     prefix = f"{instance.id}_" if instance.id else ""
     return os.path.join('covers', f"{prefix}{safe_name}.{ext}")
+
+def playlist_cover_path(instance, filename):
+    ext = filename.split('.')[-1]
+    safe_name = re.sub(r'[^\w\s-]', '', instance.name).strip().replace(' ', '_')
+    prefix = f"{instance.id}_" if instance.id else ""
+    return os.path.join('playlists', f"{prefix}{safe_name}.{ext}")
 
 def song_audio_path(instance, filename):
     ext = filename.split('.')[-1]
@@ -31,21 +45,23 @@ def song_audio_path(instance, filename):
     prefix = f"{instance.id}_" if instance.id else ""
     return os.path.join('songs', f"{prefix}{safe_name}.{ext}")
 
+def song_lrc_path(instance, filename):
+    ext = filename.split('.')[-1]
+    safe_name = re.sub(r'[^\w\s-]', '', instance.name).strip().replace(' ', '_')
+    prefix = f"{instance.id}_" if instance.id else ""
+    return os.path.join('lyrics', f"{prefix}{safe_name}.{ext}")
+
 # 1. User Model
 class User(models.Model):
-    # Django will automatically create id as primary key (replacing uid)
     username = models.CharField(max_length=100)
     password = models.CharField(max_length=100)
     avatar = models.ImageField(upload_to='avatars/', default='avatars/default.jpeg')
     date_joined = models.DateTimeField(auto_now_add=True, null=True)
     birth = models.DateField(null=True, blank=True)
-    identity = models.CharField(max_length=100)
     status = models.CharField(max_length=100)
     email = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=11, null=True, blank=True)
     city = models.CharField(max_length=100, null=True, blank=True)
-    membership = models.IntegerField(default=0)
-    last_played_song = models.ForeignKey('Song', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return self.username
@@ -53,33 +69,18 @@ class User(models.Model):
 
 # 2. Song Model
 class Song(models.Model):
-    # Django will automatically create id as primary key (replacing s_id)
-    name = models.CharField(max_length=100) # sname -> name
-    album = models.CharField(max_length=100)
-    lyrics = models.TextField(default='Pure Music', null=True, blank=True)
-    cover = models.ImageField(upload_to=song_cover_path, default='covers/default.jpg')
-    arrangement = models.CharField(max_length=100)
-    song_type = models.CharField(max_length=100) # stype -> song_type
-    introduction = models.TextField(default='No Introduction') # sintroduction -> introduction
-    release_date = models.DateField() # release_time -> release_date
+    name = models.CharField(max_length=100) 
+    album = models.CharField(max_length=100, default='Unknown Album', null=True, blank=True)
+    lyrics = models.FileField(upload_to=song_lrc_path, null=True, blank=True, default='1145141919810')
+    cover = models.ImageField(upload_to=song_cover_path, default='covers/default_cover.jpg')
+    arrangement = models.CharField(max_length=100, default='Unknown Artist', null=True, blank=True)
+    song_type = models.CharField(max_length=100)
+    introduction = models.TextField(default='No Introduction')
+    release_date = models.DateField()
     views = models.IntegerField(default=0)
-    download_link = models.FileField(upload_to=song_audio_path, null=True, blank=True) # download -> download_link
+    download_link = models.FileField(upload_to=song_audio_path, null=True, blank=True)
     
-    # Replaces favourite table
     favorited_by = models.ManyToManyField(User, related_name='favorite_songs', blank=True)
-
-    def save(self, *args, **kwargs):
-        # Handle file cleanup if the name changed or replacement occurred
-        if self.pk:
-            try:
-                old_song = Song.objects.get(pk=self.pk)
-                if old_song.name != self.name:
-                    # Logic here could rename physical files, but Django ImageField usually needs manual move
-                    # For now, let's keep it simple: new uploads will follow the new name.
-                    pass
-            except Song.DoesNotExist:
-                pass
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -87,16 +88,15 @@ class Song(models.Model):
 
 # 3. Playlist Model
 class Playlist(models.Model):
-    # Django will automatically create id as primary key (replacing pid)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='playlists') # uid -> user_id (in database)
-    name = models.CharField(max_length=100) # pname -> name
-    cover = models.CharField(max_length=100) # pcover -> cover
-    is_private = models.BooleanField(default=False) # private -> is_private
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='playlists')
+    name = models.CharField(max_length=100)
+    cover = models.ImageField(upload_to=playlist_cover_path, default='playlists/default_playlist.png')
+    is_private = models.BooleanField(default=False)
     views = models.IntegerField(default=0)
+    introduction = models.TextField(default='No Description', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
-    
-    # Replaces playlist_songs table
     songs = models.ManyToManyField(Song, related_name='included_in_playlists', blank=True)
+    favorited_by = models.ManyToManyField(User, related_name='favorited_playlists', blank=True)
 
     def __str__(self):
         return self.name
@@ -104,46 +104,34 @@ class Playlist(models.Model):
 
 # 4. Comment Model
 class Comment(models.Model):
-    # Django will automatically create id as primary key (replacing cid)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments') # uid -> user_id
-    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='comments') # s_id -> song_id
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='comments')
     content = models.TextField()
-    good_count = models.IntegerField(default=0) # good -> good_count
-    bad_count = models.IntegerField(default=0)  # bad -> bad_count
-    created_at = models.DateTimeField(auto_now_add=True) # time -> created_at
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
+    liked_by = models.ManyToManyField(User, related_name='liked_comments', blank=True)
+    good_count = models.IntegerField(default=0)
+    bad_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.song.name}"
+        return f"{self.user.username} - {self.song.name} ({self.id})"
 
 
-# 5. PlayHistory Model (replacing history table)
+# 5. PlayHistory Model
 class PlayHistory(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='play_history') # uid -> user_id
-    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='play_history') # s_id -> song_id
-    played_at = models.DateTimeField(auto_now_add=True) # time -> played_at
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='play_history')
+    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='play_history')
+    played_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.user.username} played {self.song.name}"
 
 
-# 6. Announcement Model
-class Announcement(models.Model):
-    # Django will automatically create id as primary key (replacing aid)
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_announcements') # srcuid
-    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_announcements') # desuid
-    created_at = models.DateTimeField(auto_now_add=True) # time -> created_at
-    content = models.TextField()
-
-    def __str__(self):
-        return f"Announcement from {self.sender.username} to {self.receiver.username}"
-
-
 # 7. Feedback Model
 class Feedback(models.Model):
-    # Django will automatically create id as primary key (replacing fid)
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_feedbacks') # srcuid
-    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_feedbacks') # desuid
-    created_at = models.DateTimeField(auto_now_add=True) # time -> created_at
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_feedbacks')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_feedbacks')
+    created_at = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
 
     def __str__(self):
@@ -152,19 +140,133 @@ class Feedback(models.Model):
 
 # 8. Invitation Model
 class Invitation(models.Model):
-    # Django will automatically create id as primary key (replacing iid)
     code = models.IntegerField()
 
     def __str__(self):
         return str(self.code)
 
-# Signals to keep CustomUser and AuthUser synchronized when deleted from Admin
+
+# --- SIGNALS FOR FILE MANAGEMENT & SYNC ---
+
 @receiver(post_delete, sender=User)
 def delete_auth_user(sender, instance, **kwargs):
     if instance.username:
         AuthUser.objects.filter(username=instance.username).delete()
+    # Cleanup avatar
+    if instance.avatar and 'default.jpeg' not in str(instance.avatar.name):
+        delete_file_on_disk(instance.avatar)
 
 @receiver(post_delete, sender=AuthUser)
 def delete_custom_user(sender, instance, **kwargs):
     if instance.username:
         User.objects.filter(username=instance.username).delete()
+
+@receiver(pre_save, sender=Song)
+def song_pre_save_cleanup(sender, instance, **kwargs):
+    if not instance.pk: return
+    try:
+        old_obj = Song.objects.get(pk=instance.pk)
+    except Song.DoesNotExist: return
+
+    # Cleanup cover if name changed
+    if old_obj.cover.name != instance.cover.name:
+        if old_obj.cover and 'default' not in str(old_obj.cover.name):
+            delete_file_on_disk(old_obj.cover)
+            
+    # Cleanup audio if name changed
+    if old_obj.download_link.name != instance.download_link.name:
+        if old_obj.download_link:
+            delete_file_on_disk(old_obj.download_link)
+
+    # Cleanup lyrics if name changed
+    if old_obj.lyrics.name != instance.lyrics.name:
+        if old_obj.lyrics:
+            delete_file_on_disk(old_obj.lyrics)
+
+@receiver(post_delete, sender=Song)
+def song_post_delete_cleanup(sender, instance, **kwargs):
+    if instance.cover and 'default' not in str(instance.cover.name):
+        delete_file_on_disk(instance.cover)
+    if instance.download_link:
+        delete_file_on_disk(instance.download_link)
+    if instance.lyrics:
+        delete_file_on_disk(instance.lyrics)
+
+@receiver(post_save, sender=Song)
+def song_post_save_rename(sender, instance, **kwargs):
+    def get_safe_name(name):
+        return re.sub(r'[^\w\s-]', '', name).strip().replace(' ', '_')
+
+    changed = False
+    safe_name = get_safe_name(instance.name)
+    
+    # Standardize Cover
+    if instance.cover and 'default' not in str(instance.cover.name):
+        ext = instance.cover.name.split('.')[-1]
+        expected_name = f"covers/{instance.id}_{safe_name}.{ext}"
+        if instance.cover.name != expected_name:
+            if instance.cover.storage.exists(instance.cover.name):
+                old_path = instance.cover.path
+                new_path = os.path.join(settings.MEDIA_ROOT, expected_name)
+                os.makedirs(os.path.dirname(new_path), exist_ok=True)
+                if old_path != new_path:
+                    try:
+                        if os.path.exists(new_path): os.remove(new_path)
+                        os.rename(old_path, new_path)
+                        instance.cover.name = expected_name
+                        changed = True
+                    except Exception as e:
+                        print(f"[Models] Cover Rename failed: {e}")
+
+    # Standardize Audio
+    if instance.download_link:
+        ext = instance.download_link.name.split('.')[-1]
+        expected_name = f"songs/{instance.id}_{safe_name}.{ext}"
+        if instance.download_link.name != expected_name:
+            if instance.download_link.storage.exists(instance.download_link.name):
+                old_path = instance.download_link.path
+                new_path = os.path.join(settings.MEDIA_ROOT, expected_name)
+                os.makedirs(os.path.dirname(new_path), exist_ok=True)
+                if old_path != new_path:
+                    try:
+                        if os.path.exists(new_path): os.remove(new_path)
+                        os.rename(old_path, new_path)
+                        instance.download_link.name = expected_name
+                        changed = True
+                    except Exception as e:
+                        print(f"[Models] Audio Rename failed: {e}")
+
+    # Standardize Lyrics
+    if instance.lyrics:
+        ext = instance.lyrics.name.split('.')[-1]
+        expected_name = f"lyrics/{instance.id}_{safe_name}.{ext}"
+        if instance.lyrics.name != expected_name:
+            if instance.lyrics.storage.exists(instance.lyrics.name):
+                old_path = instance.lyrics.path
+                new_path = os.path.join(settings.MEDIA_ROOT, expected_name)
+                os.makedirs(os.path.dirname(new_path), exist_ok=True)
+                if old_path != new_path:
+                    try:
+                        if os.path.exists(new_path): os.remove(new_path)
+                        os.rename(old_path, new_path)
+                        instance.lyrics.name = expected_name
+                        changed = True
+                    except Exception as e:
+                        print(f"[Models] Lyrics Rename failed: {e}")
+
+    if changed:
+        Song.objects.filter(pk=instance.pk).update(
+            cover=instance.cover.name, 
+            download_link=instance.download_link.name,
+            lyrics=instance.lyrics.name
+        )
+
+@receiver(pre_save, sender=User)
+def user_pre_save_cleanup(sender, instance, **kwargs):
+    if not instance.pk: return
+    try:
+        old_user = User.objects.get(pk=instance.pk)
+    except User.DoesNotExist: return
+    if old_user.avatar.name != instance.avatar.name:
+        if old_user.avatar and 'default.jpeg' not in str(old_user.avatar.name):
+            delete_file_on_disk(old_user.avatar)

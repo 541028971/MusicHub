@@ -150,7 +150,7 @@
 
                 // Ensure it's an image
                 if (!file.type.match('image.*')) {
-                    alert('Please select a valid image file (JPG, PNG).');
+                    showHubAlert('Invalid File', 'Please select a valid image file (JPG, PNG).');
                     return;
                 }
 
@@ -187,6 +187,15 @@
 
         // Intercept form submission to get the final cropped image data
         form.addEventListener('submit', function (e) {
+            // If NOT in edit mode (i.e., new registration), clear the play queue
+            const isRegistration = !window.location.search.includes('is_edit=true') && !{% if is_edit %}true{% else %}false{% endif %};
+            
+            if (isRegistration && window.parent && window.parent.clearAuroraQueue) {
+                window.parent.clearAuroraQueue();
+            } else if (isRegistration && window.clearAuroraQueue) {
+                window.clearAuroraQueue();
+            }
+
             if (cropper) {
                 // Prevent default submission momentarily
                 e.preventDefault();

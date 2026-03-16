@@ -255,7 +255,7 @@
         <div class="sidebar-footer">
             {% if user.is_authenticated %}
             <div style="margin-bottom:6px;">{{ user.username }}</div>
-            <a href="{% url 'admin:logout' %}">Log out</a>
+            <a href="{% url 'music:index' %}">Back</a>
             {% endif %}
         </div>
     </aside>

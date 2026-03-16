@@ -1,0 +1,392 @@
+<style>
+    /* Play Queue Styles */
+    .play-queue {
+        position: fixed;
+        top: 20px;
+        right: 0;
+        width: 420px;
+        height: calc(100vh - 80px - 40px); /* 80px for player, 20px top margin, 20px bottom margin */
+        background: rgba(255, 255, 255, 0.08); /* Frosted glass matching library/album */
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-right: none;
+        border-radius: 24px 0 0 24px;
+        z-index: 20001; /* Above overlay */
+        transform: translateX(100%);
+        transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        box-shadow: -10px 10px 40px rgba(0, 0, 0, 0.4);
+        color: #fff;
+        overflow: hidden; /* Ensure content follows rounded corners */
+    }
+
+    .play-queue.active {
+        transform: translateX(0);
+    }
+
+    .no-transition {
+        transition: none !important;
+    }
+
+    .play-queue-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.1); /* Reduced dimming */
+        z-index: 20000;
+        display: none;
+    }
+    
+    .play-queue-header {
+        padding: 25px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .play-queue-title {
+        font-size: 1.25em;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.5px;
+    }
+
+    .play-queue-count {
+        font-size: 0.7em;
+        color: rgba(255, 255, 255, 0.4);
+        margin-left: 3px;
+        vertical-align: super;
+        font-weight: 600;
+    }
+
+    .play-queue-header-right {
+        display: flex;
+        gap: 25px;
+    }
+
+    .queue-action {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85em;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+    }
+
+    .queue-action:hover {
+        color: #00C78A;
+    }
+    
+    #queue-clear:hover {
+        color: #ff4444;
+    }
+
+    .play-queue-content {
+        flex: 1;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.1) transparent;
+    }
+    
+    .play-queue-content::-webkit-scrollbar {
+        width: 6px;
+    }
+    .play-queue-content::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.1);
+        border-radius: 3px;
+    }
+
+    /* Queue Item Styles */
+    .queue-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 25px;
+        gap: 15px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .queue-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .queue-item.active {
+        background: rgba(0, 199, 138, 0.08);
+    }
+
+    .queue-item.active .queue-item-name {
+        color: #00C78A;
+        font-weight: 700;
+    }
+
+    .queue-cover-wrapper {
+        position: relative;
+        width: 45px;
+        height: 45px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .queue-item-cover {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: filter 0.3s;
+    }
+
+    .queue-item:hover .queue-item-cover,
+    .queue-item.active .queue-item-cover {
+        filter: brightness(0.5);
+    }
+
+    .queue-play-overlay {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s;
+        color: #fff;
+    }
+
+    .queue-item:hover .queue-play-overlay,
+    .queue-item.active .queue-play-overlay {
+        opacity: 1;
+    }
+
+    .queue-item-info {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .queue-item-name {
+        font-size: 0.95em;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 2px;
+        transition: color 0.3s;
+    }
+
+    .queue-item-artist {
+        font-size: 0.8em;
+        color: rgba(255, 255, 255, 0.4);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .queue-item-right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 45px;
+        justify-content: flex-end;
+    }
+
+    .queue-item-duration {
+        font-size: 0.8em;
+        color: rgba(255, 255, 255, 0.3);
+        font-family: 'Open Sans', 'Courier New', monospace;
+    }
+
+    .queue-item-actions {
+        display: none;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        padding: 5px 12px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        gap: 10px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .queue-item:hover .queue-item-duration {
+        display: none;
+    }
+
+    .queue-item:hover .queue-item-actions {
+        display: flex;
+    }
+
+    /* Redundant queue-action-btn styles removed to use global library styles */
+
+    /* Left-extending Context Menu */
+    .queue-context-menu {
+        position: absolute;
+        right: 100%; /* Pushes it to the left of the item */
+        top: 50%;
+        transform: translateY(-50%) translateX(-15px);
+        background: rgba(28, 28, 28, 0.98);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        box-shadow: -10px 10px 30px rgba(0,0,0,0.5);
+        padding: 8px 0;
+        min-width: 180px;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 20002;
+    }
+
+    .queue-context-menu.active {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(-50%) translateX(-5px);
+    }
+
+    .queue-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 20px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+
+    .queue-menu-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #00C78A;
+    }
+
+    .queue-menu-item svg {
+        opacity: 0.6;
+    }
+</style>
+
+<!-- Play Queue Overlay (to catch clicks outside) -->
+<div id="play-queue-overlay" class="play-queue-overlay"></div>
+
+<!-- Play Queue Sidebar -->
+<div id="play-queue" class="play-queue">
+    <div class="play-queue-header">
+        <div class="play-queue-header-left">
+            <span class="play-queue-title">Play Queue<span class="play-queue-count" id="queue-count">0</span></span>
+        </div>
+        <div class="play-queue-header-right">
+            <div class="queue-action" id="queue-collect-all" title="Collect All to Playlist" style="gap: 5px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 12H3"></path><path d="M16 6H3"></path><path d="M16 18H3"></path><path d="M18 9v6"></path><path d="M21 12h-6"></path>
+                </svg>
+                <span>Collect All</span>
+            </div>
+            <div class="queue-action" id="queue-clear" title="Clear All">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                </svg>
+                <span>Clear</span>
+            </div>
+        </div>
+    </div>
+    <div class="play-queue-content" id="queue-songs-list">
+        <div style="padding: 40px; text-align: center; color: rgba(255,255,255,0.4);">
+            Queue is empty
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const queueBtn = document.getElementById('player-queue-btn');
+        const queue = document.getElementById('play-queue');
+        const queueOverlay = document.getElementById('play-queue-overlay');
+
+        if (queueBtn && queue && queueOverlay) {
+            const toggleQueue = (e) => {
+                if (e) e.stopPropagation();
+                const isActive = queue.classList.toggle('active');
+                queueOverlay.style.display = isActive ? 'block' : 'none';
+                localStorage.setItem('hub_queue_open', isActive);
+            };
+
+            const closeQueue = () => {
+                queue.classList.remove('active');
+                queueOverlay.style.display = 'none';
+                localStorage.setItem('hub_queue_open', 'false');
+            };
+
+            queueBtn.addEventListener('click', toggleQueue);
+            queueOverlay.addEventListener('click', closeQueue);
+
+            // Persistent state check
+            if (localStorage.getItem('hub_queue_open') === 'true') {
+                queue.classList.add('no-transition');
+                queue.classList.add('active');
+                queueOverlay.style.display = 'block';
+                // Small delay to allow reflow, then re-enable transitions for future user clicks
+                setTimeout(() => {
+                    queue.classList.remove('no-transition');
+                }, 100);
+            }
+            
+            // Clear Queue Logic
+            const clearBtn = document.getElementById('queue-clear');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    if (window.playerQueue.length === 0) return;
+                    showHubConfirm('Clear Queue', 'Are you sure you want to clear the play queue?', () => {
+                        if (window.clearAuroraQueue) {
+                            window.clearAuroraQueue();
+                        } else {
+                            // Fallback if global not ready
+                            window.playerQueue = [];
+                            window.queueIndex = -1;
+                            window.currentSongId = null;
+                            if (typeof currentAudio !== 'undefined') {
+                                currentAudio.pause();
+                                currentAudio.src = '';
+                            }
+                        }
+                        showHubToast('Queue cleared');
+                    });
+                });
+            }
+
+            // Collect All Logic
+            const collectBtn = document.getElementById('queue-collect-all');
+            if (collectBtn) {
+                collectBtn.addEventListener('click', () => {
+                    if (window.playerQueue.length === 0) {
+                        showHubToast('Queue is empty');
+                        return;
+                    }
+                    const songIds = window.playerQueue.map(s => s.id).join(',');
+                    if (typeof openPlaylistModal === 'function') {
+                        openPlaylistModal(songIds);
+                    }
+                });
+            }
+
+            // Close on hitting ESC
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && queue.classList.contains('active')) {
+                    closeQueue();
+                }
+            });
+        }
+    });
+</script>

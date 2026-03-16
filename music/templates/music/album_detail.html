@@ -1,0 +1,122 @@
+{% extends 'music/base.html' %}
+{% load static %}
+{% load music_tags %}
+
+{% block title %}Album - {{ album.name }}{% endblock %}
+
+{% block content %}
+<div class="playlist-detail-container album-detail-container page-entrance" data-album-name="{{ album.name }}">
+    
+    <div class="playlist-detail-header">
+        <img src="{{ album.cover }}" class="playlist-detail-cover" onerror="this.src='/media/covers/default_cover.jpg'">
+        <div class="playlist-detail-info">
+            <h1 class="playlist-detail-title">{{ album.name }}</h1>
+            <div class="playlist-detail-meta">
+                <span>{{ album.song_count }} {{ album.song_count|pluralize:"Song,Songs" }}</span>
+            </div>
+            <div class="playlist-detail-actions">
+                <button class="action-btn btn-play-all {% if not album.songs %}disabled{% endif %}" onclick="playPlaylistSongs([
+                    {% for s in album.songs %}
+                    {
+                        url: '{{ s.file_url }}',
+                        title: '{{ s.title|escapejs }}',
+                        artist: '{{ s.artist|escapejs }}',
+                        cover: '{{ s.cover }}',
+                        id: '{{ s.id }}',
+                        album: '{{ album.name|escapejs }}',
+                        isLiked: {% if s.is_liked %}true{% else %}false{% endif %}
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ])">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802 0 0 1 0 1.393z"/>
+                    </svg>
+                    Play All
+                </button>
+                <button class="action-btn btn-glass {% if not album.songs %}disabled{% endif %}" onclick="showHubToast('Downloading album...')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.1 0 1 0-.708.708l3 3z"/>
+                    </svg>
+                    Download
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="song-table-container">
+        <div class="song-row header" style="border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
+            <div>#</div>
+            <div>Title</div>
+            <div></div>
+            <div>Artist</div>
+            <div style="text-align: center;">Likes</div>
+        </div>
+
+        {% for s in album.songs %}
+        <div class="song-row" data-song-id="{{ s.id }}" style="cursor: default;">
+            <div class="song-index-col" style="color: rgba(255,255,255,0.9); position: relative; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; padding-left: 5px;">
+                <span class="index-num">{{ forloop.counter|stringformat:"02d" }}</span>
+                <div class="index-play-btn" onclick="loadAndPlay('{{ s.file_url }}', '{{ s.title|escapejs }}', '{{ s.artist|escapejs }}', '{{ s.cover }}', {{ s.id }})">
+                    <svg class="icon-play" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+                    </svg>
+                    <svg class="icon-pause" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16" style="display: none;">
+                        <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="song-cell-title">
+                <div style="position: relative; cursor: pointer; flex-shrink: 0; display: flex; align-items: center;" onclick="loadAndPlay('{{ s.file_url }}', '{{ s.title|escapejs }}', '{{ s.artist|escapejs }}', '{{ s.cover }}', {{ s.id }})">
+                    <img src="{{ s.cover }}" class="song-cell-img" alt="{{ s.title }}" onerror="this.onerror=null; this.src='/media/covers/default_cover.jpg'">
+                </div>
+                <div class="song-title-wrapper" style="width: 100%; min-width: 0; overflow: hidden;">
+                    <div class="song-title-marquee">
+                        <span class="song-title-text song-title-link">{{ s.title }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="row-action-pill">
+                <div class="row-action-btn" onclick="event.stopPropagation(); downloadSong('{{ s.file_url }}', '{{ s.title|escapejs }}')" title="Download">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </div>
+                <div class="row-action-btn" onclick="event.stopPropagation(); window.triggerAddToPlaylist({{ s.id }})" title="Add to Playlist">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 12H3"></path><path d="M16 6H3"></path><path d="M16 18H3"></path><path d="M18 9v6"></path><path d="M21 12h-6"></path>
+                    </svg>
+                </div>
+                <div class="row-action-btn" onclick="event.stopPropagation(); showHubToast('Comments coming soon!')" title="Comment">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="hover-marquee-wrapper {% if not s.artist or 'unknown' in s.artist|lower %}metadata-unknown{% endif %}">
+                <div class="hover-marquee-content">
+                    {% if not s.artist or 'unknown' in s.artist|lower %}
+                        <span>{{ s.artist|default:"Unknown Artist" }}</span>
+                    {% else %}
+                        {% for artist_name in s.artist|split_artists %}
+                            <a href="{% url 'music:artist_detail_frontend' artist_name %}" class="artist-link" onclick="event.stopPropagation();">{{ artist_name }}</a>{% if not forloop.last %}<span class="artist-separator">/</span>{% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            <div style="text-align: center; display: flex; align-items: center; justify-content: center;"
+                 class="song-row-heart {% if s.is_liked %}is-liked{% endif %}" data-song-id="{{ s.id }}"
+                 onclick="event.stopPropagation(); toggleLike({{ s.id }}, this)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#ff4444" viewBox="0 0 16 16" class="heart-filled">
+                    <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="heart-empty">
+                    <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"/>
+                </svg>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

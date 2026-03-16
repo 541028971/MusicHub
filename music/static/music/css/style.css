@@ -211,21 +211,22 @@ fieldset#body {
     font-family: 'Open Sans', sans-serif;
     width: auto;
     float: left;
-    background: #00C78A;
-    color: #fff;
+    background: var(--aurora-bg-alpha);
+    color: var(--aurora-green);
+    border: 1px solid var(--aurora-border-alpha);
     font-size: 0.8725em;
     padding: 8px 20px;
-    border: none;
     margin: 0 12px 0 0;
     cursor: pointer;
-    transition: all .5s;
-    -webkit-transition: all .5s;
-    -moz-transition: all .5s;
-    -o-transition: all .5s;
+    transition: all .3s;
+    border-radius: 4px;
 }
 
 #loginForm #login:hover {
-    background: #555;
+    background: var(--aurora-bg-alpha-hover);
+    color: var(--aurora-green-hover);
+    border-color: var(--aurora-green);
+    box-shadow: 0 0 10px var(--aurora-shadow);
 }
 
 /* Forgot your password */
@@ -252,7 +253,7 @@ input:focus {
 }
 
 .banner {
-    background: url(../images/1.jpg) no-repeat center top;
+    background: url(../images/main_bg.jpg) no-repeat center top;
     background-size: cover;
     -webkit-background-size: cover;
     -moz-background-size: cover;
@@ -581,7 +582,7 @@ ul#footer-links li a:hover {
 .resp-tab-active {
     text-shadow: none;
     color: #fff;
-    background: #00C78A;
+    background: var(--aurora-green);
 }
 
 .resp-tabs-container {
