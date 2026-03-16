@@ -2294,12 +2294,35 @@
                     if (!response.ok) throw new Error('Network response was not ok');
                     return response.text();
                 })
-                .then(html => {
+                .then(async html => {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
                     const newDynamic = doc.querySelector('#dynamic-content');
                     
                     if (newDynamic) {
+                        // --- PRELOAD CRITICAL IMAGES ---
+                        // Find header covers and the first 8 song images to ensure a smooth "above the fold" entry
+                        const criticalImgs = Array.from(newDynamic.querySelectorAll('.playlist-detail-cover, .album-detail-cover, .song-cell-img'))
+                                             .slice(0, 8)
+                                             .map(img => img.src)
+                                             .filter(src => src && !src.includes('data:image'));
+                        
+                        if (criticalImgs.length > 0) {
+                            // Create a promise that resolves when images are cached or timeout after 1.5s to prevent hanging
+                            const imgPromises = criticalImgs.map(src => {
+                                return new Promise(resolve => {
+                                    const i = new Image();
+                                    i.onload = i.onerror = resolve;
+                                    i.src = src;
+                                });
+                            });
+                            // Wait for images or at least a significant chunk of them
+                            await Promise.race([
+                                Promise.all(imgPromises),
+                                new Promise(res => setTimeout(res, 800)) // Max wait for images: 800ms
+                            ]);
+                        }
+
                         // 1. Sync Styles & Scripts (Cleanup old ones first)
                         document.querySelectorAll('.injected-asset').forEach(el => el.remove());
 
@@ -2317,7 +2340,13 @@
                         dynamicContent.innerHTML = newDynamic.innerHTML;
                         document.title = doc.title;
                         
-                        // Force-disable entrance animation if skipAnimation is true
+                        // 4. RESET UI STATE IMMEDIATELY - Critical for snappiness
+                        // We reset opacity BEFORE running scripts to ensure the entrance 
+                        // animation triggers on a fully visible container.
+                        dynamicContent.style.transition = 'none'; // Snap back to visible
+                        dynamicContent.style.opacity = '1';
+                        
+                        // Force-disable entrance animation only if explicitly requested
                         if (skipAnimation) {
                             const entranceElement = dynamicContent.querySelector('.page-entrance');
                             if (entranceElement) {
@@ -2327,8 +2356,7 @@
                             }
                         }
 
-                        // 4. Manual Script Execution (since innerHTML doesn't execute scripts)
-                        // Finding all scripts within the dynamic content (including sub-includes)
+                        // 5. Manual Script Execution (since innerHTML doesn't execute scripts)
                         const scripts = newDynamic.querySelectorAll('script');
                         scripts.forEach(oldScript => {
                             const newScript = document.createElement('script');
@@ -2336,12 +2364,13 @@
                                 newScript.setAttribute(attr.name, attr.value);
                             });
                             newScript.textContent = oldScript.textContent;
-                            newScript.classList.add('injected-asset'); // Mark for cleanup
+                            newScript.classList.add('injected-asset');
                             document.body.appendChild(newScript);
                         });
 
-                        // 5. Reset UI state immediately
-                        dynamicContent.style.opacity = '1';
+                        // 6. Final cleanup of animation locks
+                        // Since we just did a normal navigation, ensure the lock is off immediately
+                        document.documentElement.classList.remove('no-entrance-anim');
                         
                         if (pushState === 'replace') {
                             history.replaceState({ url: url }, doc.title, url);
