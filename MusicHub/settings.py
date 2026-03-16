@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-upx&_w_ci-(n4hf$pg8#avaf-d424a(*28+p29w05fra51dnr6"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['56.228.13.76', '127.0.0.1', 'localhost', 'ec2-56-228-13-76.eu-north-1.compute.amazonaws.com']
 
@@ -118,13 +118,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "/static/"
-
+STATIC_ROOT = BASE_DIR / 'static'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
+    STATIC_ROOT,
 ]
 
 # Media files (Uploaded by users)
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-STATIC_ROOT = BASE_DIR / 'staticfiles'
