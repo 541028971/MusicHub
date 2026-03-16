@@ -2294,35 +2294,12 @@
                     if (!response.ok) throw new Error('Network response was not ok');
                     return response.text();
                 })
-                .then(async html => {
+                .then(html => {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
                     const newDynamic = doc.querySelector('#dynamic-content');
                     
                     if (newDynamic) {
-                        // --- PRELOAD CRITICAL IMAGES ---
-                        // Find header covers and the first 8 song images to ensure a smooth "above the fold" entry
-                        const criticalImgs = Array.from(newDynamic.querySelectorAll('.playlist-detail-cover, .album-detail-cover, .song-cell-img'))
-                                             .slice(0, 8)
-                                             .map(img => img.src)
-                                             .filter(src => src && !src.includes('data:image'));
-                        
-                        if (criticalImgs.length > 0) {
-                            // Create a promise that resolves when images are cached or timeout after 1.5s to prevent hanging
-                            const imgPromises = criticalImgs.map(src => {
-                                return new Promise(resolve => {
-                                    const i = new Image();
-                                    i.onload = i.onerror = resolve;
-                                    i.src = src;
-                                });
-                            });
-                            // Wait for images or at least a significant chunk of them
-                            await Promise.race([
-                                Promise.all(imgPromises),
-                                new Promise(res => setTimeout(res, 800)) // Max wait for images: 800ms
-                            ]);
-                        }
-
                         // 1. Sync Styles & Scripts (Cleanup old ones first)
                         document.querySelectorAll('.injected-asset').forEach(el => el.remove());
 
@@ -2340,10 +2317,9 @@
                         dynamicContent.innerHTML = newDynamic.innerHTML;
                         document.title = doc.title;
                         
-                        // 4. RESET UI STATE IMMEDIATELY - Critical for snappiness
-                        // We reset opacity BEFORE running scripts to ensure the entrance 
-                        // animation triggers on a fully visible container.
-                        dynamicContent.style.transition = 'none'; // Snap back to visible
+                        // 4. RESET UI STATE INSTANTLY
+                        // We snap opacity back to 1 immediately so content is visible right away.
+                        dynamicContent.style.transition = 'none'; 
                         dynamicContent.style.opacity = '1';
                         
                         // Force-disable entrance animation only if explicitly requested
