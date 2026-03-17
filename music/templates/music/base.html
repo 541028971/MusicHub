@@ -4506,6 +4506,7 @@
                     <form id="modalOverlayLoginForm" action="{% url 'music:login' %}" method="POST"
                         style="margin: 0; width: 100%; float: none;">
                         {% csrf_token %}
+                        <div id="loginErrorMessage" style="color: #ff4d6d; font-size: 0.9em; margin-bottom: 1.5em; display: none; text-align: center; background: rgba(255, 77, 109, 0.1); padding: 10px; border-radius: 6px; border: 1px solid rgba(255, 77, 109, 0.2);"></div>
                         <fieldset id="modalInnerAuthBody" style="padding: 0; border: none; background: transparent;">
                             <fieldset
                                 style="width: 100%; padding: 0; margin: 0 0 1.5em 0; border: none; background: transparent;">
@@ -4925,16 +4926,56 @@
             // Suppress entrance animation and preserve scroll on login/register form submit
             var modalLoginForm = document.getElementById('modalOverlayLoginForm');
             if (modalLoginForm) {
-                modalLoginForm.addEventListener('submit', function() {
-                    sessionStorage.setItem('no_entrance_anim', '1');
+                modalLoginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const loginBtn = document.getElementById('login');
+                    const errorMsg = document.getElementById('loginErrorMessage');
+                    const originalBtnValue = loginBtn.value;
+                    
+                    // Visual feedback
+                    loginBtn.value = 'Signing in...';
+                    loginBtn.disabled = true;
+                    errorMsg.style.display = 'none';
+                    
                     var mainArea = document.querySelector('.main-scrollable-area');
                     if (mainArea) sessionStorage.setItem('restore_scroll', mainArea.scrollTop);
+
+                    const formData = new FormData(this);
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            loginBtn.value = originalBtnValue;
+                            loginBtn.disabled = false;
+                            errorMsg.textContent = data.error;
+                            errorMsg.style.display = 'block';
+                            
+                            // Subtle shake animation if possible, or just focus
+                            document.getElementById('password').value = '';
+                            document.getElementById('password').focus();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        loginBtn.value = originalBtnValue;
+                        loginBtn.disabled = false;
+                        errorMsg.textContent = 'Connection error. Please try again.';
+                        errorMsg.style.display = 'block';
+                    });
                 });
             }
             var modalRegForm = document.getElementById('modalOverlayRegisterForm');
             if (modalRegForm) {
                 modalRegForm.addEventListener('submit', function() {
-                    sessionStorage.setItem('no_entrance_anim', '1');
                     var mainArea = document.querySelector('.main-scrollable-area');
                     if (mainArea) sessionStorage.setItem('restore_scroll', mainArea.scrollTop);
                 });

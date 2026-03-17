@@ -178,9 +178,15 @@ def login_view(request):
         if user is not None:
             # If valid, log them in and save the session
             auth_login(request, user)
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'redirect_url': '/'})
             return redirect('music:index')
         else:
-            # If invalid, add an error message to display on the page
+            # If invalid, return JSON error for AJAX requests
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': 'Invalid username or password.'})
+                
+            # Fallback for standard form submissions
             messages.error(request, 'Invalid username or password.')
             return redirect('music:index')
 
