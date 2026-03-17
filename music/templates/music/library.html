@@ -322,7 +322,7 @@
 <!-- List View for Songs -->
 <div class="song-table-container">
     <div class="song-row song-header"
-        style="display: grid !important; grid-template-columns: 50px 1.5fr 150px 150px 1fr 60px !important; column-gap: 20px; align-items: center; padding: 12px 20px; font-weight: 700; color: #fff; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.9;">
+        style="display: grid !important; grid-template-columns: 50px 1.5fr 110px 150px 1fr 60px !important; column-gap: 20px; align-items: center; padding: 12px 20px; font-weight: 700; color: #fff; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.9;">
         <div style="display: flex; align-items: center; justify-content: center;">#</div>
         <div>Title</div>
         <div></div> <!-- Space for actions -->
@@ -333,7 +333,7 @@
     <div class="song-list-body">
     {% for song in page_obj %}
     <div class="song-row" data-song-id="{{ song.id }}"
-        style="display: grid !important; grid-template-columns: 50px 1.5fr 150px 150px 1fr 60px !important; column-gap: 20px; align-items: center; padding: 12px 20px; border-radius: 12px; transition: all 0.2s; cursor: default; color: rgba(255, 255, 255, 0.8); font-size: 14px; height: 65px; overflow: hidden;">
+        style="display: grid !important; grid-template-columns: 50px 1.5fr 110px 150px 1fr 60px !important; column-gap: 20px; align-items: center; padding: 12px 20px; border-radius: 12px; transition: all 0.2s; cursor: default; color: rgba(255, 255, 255, 0.8); font-size: 14px; height: 65px; overflow: hidden;">
         <div class="song-index-col" style="color: rgba(255,255,255,0.95); position: relative; width: 50px; height: 35px; display: flex; align-items: center; justify-content: center;">
             <span class="index-num">{{ forloop.counter|add:page_obj.start_index|add:-1|stringformat:"02d" }}</span>
             <div class="index-play-btn" onclick="loadAndPlay('{{ song.download_link.url|escapejs }}', '{{ song.name|escapejs }}', '{{ song.arrangement|escapejs }}', '{{ song.cover.url|escapejs }}', '{{ song.id|escapejs }}')">
@@ -358,7 +358,7 @@
 
         <!-- Actions -->
         <div>
-            <div class="row-action-pill" onclick="event.stopPropagation()">
+            <div class="row-action-pill is-3-buttons" onclick="event.stopPropagation()">
                 <div class="row-action-btn" title="Download" onclick="downloadSong('{{ song.download_link.url|escapejs }}', '{{ song.name|escapejs }}')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -377,19 +377,10 @@
                         <path d="M21 12h-6"></path>
                     </svg>
                 </div>
-                <div class="row-action-btn" title="Comment">
+                <div class="row-action-btn" onclick="event.stopPropagation(); navigatePage('/comments/{{ song.id }}/')" title="Comment">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                    </svg>
-                </div>
-                <div class="row-action-btn" title="Delete">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                        <line x1="14" y1="11" x2="14" y2="17"></line>
                     </svg>
                 </div>
             </div>
@@ -409,9 +400,9 @@
             {% if song.arrangement and 'unknown' not in song.arrangement|lower %}
                 {% with artists=song.arrangement|split_artists %}
                     {% if artists|length > 1 %}
-                        onclick="event.stopPropagation(); const tUrl='/library/?q={{ song.arrangement|urlencode }}&tab=all_songs'; if(window.navigatePage) window.navigatePage(tUrl); else window.location.href=tUrl;"
+                        onclick="if(!event.target.closest('a')){ const tUrl='/library/?q={{ song.arrangement|urlencode }}&tab=all_songs'; if(window.navigatePage) window.navigatePage(tUrl); else window.location.href=tUrl; }"
                     {% else %}
-                        onclick="event.stopPropagation(); const tUrl='{% url 'music:artist_detail_frontend' song.arrangement %}'; if(window.navigatePage) window.navigatePage(tUrl); else window.location.href=tUrl;"
+                        onclick="if(!event.target.closest('a')){ const tUrl='{% url 'music:artist_detail_frontend' song.arrangement %}'; if(window.navigatePage) window.navigatePage(tUrl); else window.location.href=tUrl; }"
                     {% endif %}
                 {% endwith %}
             {% endif %}
@@ -421,7 +412,7 @@
                     <span>{{ song.arrangement|default:"Unknown Artist" }}</span>
                 {% else %}
                     {% for artist_name in song.arrangement|split_artists %}
-                        <a href="{% url 'music:artist_detail_frontend' artist_name %}" class="artist-link" onclick="event.stopPropagation();">{{ artist_name }}</a>{% if not forloop.last %}<span class="artist-separator">/</span>{% endif %}
+                        <a href="{% url 'music:artist_detail_frontend' artist_name %}" class="artist-link">{{ artist_name }}</a>{% if not forloop.last %}<span class="artist-separator">/</span>{% endif %}
                     {% endfor %}
                 {% endif %}
             </div>

@@ -1,6 +1,6 @@
 {% load music_tags %}
 <div class="song-row" data-song-id="{{ song.id }}"
-    onclick="loadAndPlay('{{ song.download_link.url }}', '{{ song.name|escapejs }}', '{{ song.arrangement|escapejs }}', '{% if song.cover %}{{ song.cover.url }}{% else %}/media/covers/default_cover.jpg{% endif %}', '{{ song.id }}')">
+    onclick="if(!event.target.closest('a'))loadAndPlay('{{ song.download_link.url }}', '{{ song.name|escapejs }}', '{{ song.arrangement|escapejs }}', '{% if song.cover %}{{ song.cover.url }}{% else %}/media/covers/default_cover.jpg{% endif %}', '{{ song.id }}')">
 
     <!-- Col 1: 序号 / 播放按钮 -->
     <div class="song-index-col" style="position:relative;width:35px;height:35px;display:flex;align-items:center;justify-content:center;">
@@ -68,7 +68,7 @@
                 <span>{{ song.arrangement|default:"Unknown Artist" }}</span>
             {% else %}
                 {% for artist_name in song.arrangement|split_artists %}
-                    <a href="{% url 'music:artist_detail_frontend' artist_name %}" class="artist-link" onclick="event.stopPropagation();">{{ artist_name }}</a>{% if not forloop.last %}<span class="artist-separator">/</span>{% endif %}
+                    <a href="{% url 'music:artist_detail_frontend' artist_name %}" class="artist-link">{{ artist_name }}</a>{% if not forloop.last %}<span class="artist-separator">/</span>{% endif %}
                 {% endfor %}
             {% endif %}
         </div>

@@ -221,15 +221,14 @@
                 </div>
             </div>
 
-            <!-- Artist -->
             <div class="hover-marquee-wrapper {% if not s.artist or 'unknown' in s.artist|lower %}metadata-unknown{% endif %}" 
-                {% if s.artist and 'unknown' not in s.artist|lower %}style="cursor: pointer;" onclick="event.stopPropagation(); const tUrl='/library/?q={{ s.artist|urlencode }}&tab=all_songs'; if(window.navigatePage) window.navigatePage(tUrl); else window.location.href=tUrl;"{% endif %}>
+                {% if s.artist and 'unknown' not in s.artist|lower %}style="cursor: pointer;" onclick="if(!event.target.closest('a')){ const tUrl='/library/?q={{ s.artist|urlencode }}&tab=all_songs'; if(window.navigatePage) window.navigatePage(tUrl); else window.location.href=tUrl;}"{% endif %}>
                 <div class="hover-marquee-content">
                     {% if not s.artist or 'unknown' in s.artist|lower %}
                         <span>{{ s.artist|default:"Unknown Artist" }}</span>
                     {% else %}
                         {% for artist_name in s.artist|split_artists %}
-                            <a href="{% url 'music:artist_detail_frontend' artist_name %}" class="artist-link" onclick="event.stopPropagation();">{{ artist_name }}</a>{% if not forloop.last %}<span class="artist-separator">/</span>{% endif %}
+                            <a href="{% url 'music:artist_detail_frontend' artist_name %}" class="artist-link">{{ artist_name }}</a>{% if not forloop.last %}<span class="artist-separator">/</span>{% endif %}
                         {% endfor %}
                     {% endif %}
                 </div>

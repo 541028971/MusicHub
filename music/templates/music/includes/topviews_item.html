@@ -1,6 +1,6 @@
 {% load music_tags %}
 <div class="topviews-item" data-song-id="{{ song.id }}"
-    onclick="if(!event.target.closest('.tv-actions'))loadAndPlay('{{ song.download_link.url }}', '{{ song.name|escapejs }}', '{{ song.arrangement|escapejs }}', '{% if song.cover %}{{ song.cover.url }}{% else %}/media/covers/default_cover.jpg{% endif %}', '{{ song.id }}')">
+    onclick="if(!event.target.closest('.tv-actions') && !event.target.closest('a'))loadAndPlay('{{ song.download_link.url }}', '{{ song.name|escapejs }}', '{{ song.arrangement|escapejs }}', '{% if song.cover %}{{ song.cover.url }}{% else %}/media/covers/default_cover.jpg{% endif %}', '{{ song.id }}')">
     <span class="tv-rank {% if rank == 1 %}tv-gold{% elif rank == 2 %}tv-silver{% elif rank == 3 %}tv-bronze{% endif %}">{{ rank }}</span>
     <div class="tv-cover-wrap">
         <img src="{% if song.cover %}{{ song.cover.url }}{% else %}/media/covers/default_cover.jpg{% endif %}"
@@ -19,10 +19,10 @@
         <span class="tv-title">{{ song.name }}</span>
         <span class="tv-meta">
             {% if not song.arrangement or 'unknown' in song.arrangement|lower %}
-                <span style="color:rgba(255,255,255,0.35)">{{ song.arrangement|default:"Unknown" }}</span>
+                <span class="metadata-unknown">{{ song.arrangement|default:"Unknown" }}</span>
             {% else %}
                 {% for artist_name in song.arrangement|split_artists %}
-                    <a href="{% url 'music:artist_detail_frontend' artist_name %}" class="tv-artist-link" onclick="event.stopPropagation()">{{ artist_name }}</a>{% if not forloop.last %}<span class="tv-artist-sep"> / </span>{% endif %}
+                    <a href="{% url 'music:artist_detail_frontend' artist_name %}" class="tv-artist-link">{{ artist_name }}</a>{% if not forloop.last %}<span class="tv-artist-sep"> / </span>{% endif %}
                 {% endfor %}
             {% endif %}
             <span class="tv-plays"> · {{ song.views }} plays</span>

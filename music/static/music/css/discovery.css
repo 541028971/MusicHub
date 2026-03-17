@@ -183,7 +183,7 @@ body {
 
 /* Main Content Area */
 .main-scrollable-area {
-    padding: 30px 40px 100px 40px;
+    padding: 35px 45px 100px 45px;
     /* Extra bottom padding for comfortable scrolling */
     color: #fff;
     flex: 1;
@@ -457,28 +457,30 @@ body.is-dragging-progress .time-display {
 .card-text {
     overflow: hidden;
     flex-grow: 1;
-    padding-right: 5px;
+    padding-right: 20px;
     min-width: 0;
 }
 
 .card-text h5 {
-    margin: 0 0 6px 0;
+    margin: 0 0 2px 0;
     font-size: 1.15em;
     font-weight: 600;
-    overflow: hidden;
+    line-height: 1.2;
+    overflow: visible !important;
 }
 
 .song-title-wrapper {
     position: relative;
     overflow: hidden;
-    height: 1.3em;
+    height: 1.6em;
     width: 100%;
     display: block;
+    line-height: 1.35;
 }
 
 .song-title-wrapper.is-overflowing {
-    -webkit-mask-image: linear-gradient(to right, transparent, black 10px, black calc(100% - 10px), transparent);
-    mask-image: linear-gradient(to right, transparent, black 10px, black calc(100% - 10px), transparent);
+    -webkit-mask-image: none;
+    mask-image: none;
 }
 
 .song-title-marquee {
@@ -627,7 +629,7 @@ body.is-dragging-progress .time-display {
 
 .card-actions {
     display: flex;
-    gap: 5px;
+    gap: 15px;
     align-items: center;
 }
 
@@ -957,7 +959,7 @@ body.is-dragging-progress .time-display {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
 .shelf-hdr-title {
@@ -1110,8 +1112,10 @@ body.is-dragging-progress .time-display {
     font-weight: 500;
     color: #fff;
     white-space: nowrap;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: visible;
     text-overflow: ellipsis;
+    line-height: 1.5;
     transition: color 0.2s;
 }
 

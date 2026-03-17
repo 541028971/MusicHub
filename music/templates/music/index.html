@@ -112,7 +112,7 @@
             {% for item in recently_songs %}
             {% with song=item.obj %}
             <div class="recent-item" data-song-id="{{ song.id }}"
-                onclick="loadAndPlay('{{ song.download_link.url }}', '{{ song.name|escapejs }}', '{{ song.arrangement|escapejs }}', '{% if song.cover %}{{ song.cover.url }}{% else %}/media/covers/default_cover.jpg{% endif %}', '{{ song.id }}')">
+                onclick="if(!event.target.closest('a'))loadAndPlay('{{ song.download_link.url }}', '{{ song.name|escapejs }}', '{{ song.arrangement|escapejs }}', '{% if song.cover %}{{ song.cover.url }}{% else %}/media/covers/default_cover.jpg{% endif %}', '{{ song.id }}')">
                 <div class="recent-cover-wrap">
                     <img src="{% if song.cover %}{{ song.cover.url }}{% else %}/media/covers/default_cover.jpg{% endif %}"
                         class="recent-cover" alt="{{ song.name }}"
@@ -130,10 +130,10 @@
                     <span class="recent-title">{{ song.name }}</span>
                     <span class="recent-artist">
                         {% if not song.arrangement or 'unknown' in song.arrangement|lower %}
-                            {{ song.arrangement|default:"Unknown" }}
+                            <span class="metadata-unknown">{{ song.arrangement|default:"Unknown" }}</span>
                         {% else %}
                             {% for artist_name in song.arrangement|split_artists %}
-                                <a href="{% url 'music:artist_detail_frontend' artist_name %}" class="recent-artist-link" onclick="event.stopPropagation()">{{ artist_name }}</a>{% if not forloop.last %}<span style="color:rgba(255,255,255,0.25)"> / </span>{% endif %}
+                                <a href="{% url 'music:artist_detail_frontend' artist_name %}" class="recent-artist-link">{{ artist_name }}</a>{% if not forloop.last %}<span style="color:rgba(255,255,255,0.25)"> / </span>{% endif %}
                             {% endfor %}
                         {% endif %}
                     </span>
@@ -167,7 +167,7 @@
             {% endfor %}
         </div>
         {% for stype, items in type_songs.items %}
-        <div class="type-song-list{% if not forloop.first %} type-panel-hidden{% endif %}" data-type="{{ stype }}">
+        <div class="type-song-list type-panel{% if not forloop.first %} type-panel-hidden{% endif %}" data-type="{{ stype }}">
             {% for item in items %}
             {% include 'music/includes/type_song_row.html' with song=item.obj is_liked=item.is_liked comment_count=item.comment_count %}
             {% endfor %}
@@ -195,7 +195,13 @@
                 <img src="{% if song.cover %}{{ song.cover.url }}{% else %}/media/covers/default_cover.jpg{% endif %}" class="compact-cover" alt="{{ song.name }}" onerror="this.src='/media/covers/default_cover.jpg'" loading="lazy" />
                 <div class="compact-info">
                     <span class="compact-title">{{ song.name }}</span>
-                    <span class="compact-artist">{{ song.arrangement|default:"Unknown Artist" }}</span>
+                    <span class="compact-artist">
+                        {% if not song.arrangement or 'unknown' in song.arrangement|lower %}
+                            <span class="metadata-unknown">{{ song.arrangement|default:"Unknown Artist" }}</span>
+                        {% else %}
+                            {{ song.arrangement }}
+                        {% endif %}
+                    </span>
                 </div>
             </div>
             {% endwith %}
@@ -283,6 +289,8 @@ document.querySelectorAll('.type-tab').forEach(function(tab) {
         if (panel) {
             panel.classList.remove('type-panel-hidden');
             updateShelfArrows(panel);
+            // Re-init marquees for newly visible cards
+            if (window.updateMarquees) window.updateMarquees();
         }
     });
 });

@@ -126,8 +126,9 @@
     {% if active_tab == 'songs' %}
     <!-- Song List View -->
     <div class="song-table-container">
-        <div class="song-row header" style="border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
-            <div>#</div>
+        <div class="song-row header" 
+             style="display: grid !important; grid-template-columns: 50px 1.5fr 110px 1fr 70px !important; column-gap: 20px; align-items: center; padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
+            <div style="display: flex; align-items: center; justify-content: center;">#</div>
             <div>Title</div>
             <div></div>
             <div>Album</div>
@@ -135,7 +136,8 @@
         </div>
 
         {% for s in artist.songs %}
-        <div class="song-row" data-song-id="{{ s.id }}" style="cursor: default;">
+        <div class="song-row" data-song-id="{{ s.id }}" 
+             style="display: grid !important; grid-template-columns: 50px 1.5fr 110px 1fr 70px !important; column-gap: 20px; align-items: center; padding: 12px 20px; border-radius: 12px; transition: all 0.2s; cursor: default;">
             <div class="song-index-col" style="color: rgba(255,255,255,0.9); position: relative; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; padding-left: 5px;">
                 <span class="index-num">{{ forloop.counter|stringformat:"02d" }}</span>
                 <div class="index-play-btn" onclick="loadAndPlay('{{ s.file_url|escapejs }}', '{{ s.title|escapejs }}', '{{ s.artist|escapejs }}', '{{ s.cover|escapejs }}', {{ s.id }})">
@@ -157,7 +159,7 @@
                     </div>
                 </div>
             </div>
-            <div class="row-action-pill">
+            <div class="row-action-pill is-3-buttons">
                 <div class="row-action-btn" onclick="event.stopPropagation(); downloadSong('{{ s.file_url|escapejs }}', '{{ s.title|escapejs }}')" title="Download">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -170,7 +172,7 @@
                         <path d="M11 12H3"></path><path d="M16 6H3"></path><path d="M16 18H3"></path><path d="M18 9v6"></path><path d="M21 12h-6"></path>
                     </svg>
                 </div>
-                <div class="row-action-btn" onclick="event.stopPropagation(); showHubToast('Comments coming soon!')" title="Comment">
+                <div class="row-action-btn" onclick="event.stopPropagation(); navigatePage('/comments/{{ s.id }}/')" title="Comment">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                     </svg>
